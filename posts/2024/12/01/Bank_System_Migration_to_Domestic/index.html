@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Bank System Migration to Domestic Tech Stack: From CentOS Retirement to Internal Cloud Go-Live - Blogger</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<meta name="description" content="Hexo theme - Blogger">
+
+
+
+
+
+    <meta name="description" content="A practical walkthrough of a banking system migration under China’s XinChuang initiative—moving from CentOS to an internal cloud while coordinating Oracle Data Guard, Elasticsearch-to-OpenSearch trans">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bank System Migration to Domestic Tech Stack: From CentOS Retirement to Internal Cloud Go-Live">
+<meta property="og:url" content="http://localhost:4000/posts/2024/12/01/Bank_System_Migration_to_Domestic/index.html">
+<meta property="og:site_name" content="Blogger">
+<meta property="og:description" content="A practical walkthrough of a banking system migration under China’s XinChuang initiative—moving from CentOS to an internal cloud while coordinating Oracle Data Guard, Elasticsearch-to-OpenSearch trans">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-12-01T20:10:10.000Z">
+<meta property="article:modified_time" content="2026-09-24T07:05:35.877Z">
+<meta property="article:author" content="Blogger">
+<meta property="article:tag" content="Banking IT">
+<meta property="article:tag" content="CentOS Migration">
+<meta property="article:tag" content="Change Management">
+<meta property="article:tag" content="Kubernetes">
+<meta property="article:tag" content="Microservices">
+<meta property="article:tag" content="OpenSearch">
+<meta property="article:tag" content="Oracle Data Guard">
+<meta property="article:tag" content="XinChuang">
+<meta name="twitter:card" content="summary">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<!-- <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro"> -->
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+
+
+<meta name="generator" content="Hexo 8.1.2"></head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    🐝
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#1-Background-and-Challenges">1&nbsp;&nbsp;<b>1. Background and Challenges</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#2-Migration-Overview-and-Layered-Strategy">2&nbsp;&nbsp;<b>2. Migration Overview and Layered Strategy</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Layered-Strategy">2.1&nbsp;&nbsp;Layered Strategy</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Core-Principles">2.2&nbsp;&nbsp;Core Principles</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Execution-Order">2.3&nbsp;&nbsp;Execution Order</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Summary-of-Approaches-by-Layer">2.4&nbsp;&nbsp;Summary of Approaches by Layer</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#3-Test-Environment-First-Microservice-Containerization-and-Integration-Validation">3&nbsp;&nbsp;<b>3. Test Environment First: Microservice Containerization and Integration Validation</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#3-1-Why-This-Comes-First">3.1&nbsp;&nbsp;3.1 Why This Comes First</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#3-2-Work-Done-in-the-Test-Environment">3.2&nbsp;&nbsp;3.2 Work Done in the Test Environment</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#3-3-Outputs-of-Successful-Validation">3.3&nbsp;&nbsp;3.3 Outputs of Successful Validation</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#4-Database-Migration-RMAN-Lays-the-Foundation-Data-Guard-Takes-Over">4&nbsp;&nbsp;<b>4. Database Migration: RMAN Lays the Foundation, Data Guard Takes Over</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#4-1-Why-Two-Stages">4.1&nbsp;&nbsp;4.1 Why Two Stages</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#4-2-The-Migration-Plan-Document-and-Review">4.2&nbsp;&nbsp;4.2 The Migration Plan Document and Review</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#4-3-The-Source-Already-Had-Primary-Standby-the-New-Server-Joined-as-a-Third-Standby">4.3&nbsp;&nbsp;4.3 The Source Already Had Primary/Standby; the New Server Joined as a Third Standby</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#4-4-Stage-One-RMAN-Full-Backup-Initialization">4.4&nbsp;&nbsp;4.4 Stage One: RMAN Full Backup Initialization</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#4-5-Stage-Two-Configure-Data-Guard-for-Real-Time-Synchronization">4.5&nbsp;&nbsp;4.5 Stage Two: Configure Data Guard for Real-Time Synchronization</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#4-6-The-Cutover-Window-Switchover">4.6&nbsp;&nbsp;4.6 The Cutover Window: Switchover</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#5-Search-Layer-Migration-Elasticsearch-→-OpenSearch">5&nbsp;&nbsp;<b>5. Search Layer Migration: Elasticsearch → OpenSearch</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#5-1-Why-It-Is-Not-a-Simple-“Copy”">5.1&nbsp;&nbsp;5.1 Why It Is Not a Simple “Copy”</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#5-2-Full-Load-Snapshot-Baseline">5.2&nbsp;&nbsp;5.2 Full Load: Snapshot Baseline</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#5-3-Incremental-Remote-Reindex-Dual-Write-Catch-Up">5.3&nbsp;&nbsp;5.3 Incremental: Remote Reindex + Dual-Write Catch-Up</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#5-4-Metadata-and-Configuration-Migration">5.4&nbsp;&nbsp;5.4 Metadata and Configuration Migration</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#5-5-Switchover-Alias-Routing">5.5&nbsp;&nbsp;5.5 Switchover: Alias Routing</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#6-Microservice-Cloud-Migration-and-External-Interface-Coordinated-Switchover">6&nbsp;&nbsp;<b>6. Microservice Cloud Migration and External-Interface Coordinated Switchover</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-1-Why-They-Must-Be-Bound-Together">6.1&nbsp;&nbsp;6.1 Why They Must Be Bound Together</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-2-Production-Deployment-and-T-Day-Traffic-Cutover">6.2&nbsp;&nbsp;6.2 Production Deployment and T-Day Traffic Cutover</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-3-The-Call-Relationship-Matrix-Maintained-Day-to-Day-Reused-at-the-Critical-Moment">6.3&nbsp;&nbsp;6.3 The Call-Relationship Matrix: Maintained Day to Day, Reused at the Critical Moment</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-4-Producing-the-Plan-and-Reporting-to-the-Client’s-Project-Manager">6.4&nbsp;&nbsp;6.4 Producing the Plan and Reporting to the Client’s Project Manager</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-5-Pushing-the-Approvals-Some-Changes-Need-a-Director’s-Signature">6.5&nbsp;&nbsp;6.5 Pushing the Approvals: Some Changes Need a Director’s Signature</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-6-Issuing-Formal-Requests-Pushing-System-by-System">6.6&nbsp;&nbsp;6.6 Issuing Formal Requests, Pushing System by System</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-7-Integration-Testing-in-the-Test-Environment">6.7&nbsp;&nbsp;6.7 Integration Testing in the Test Environment</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-8-T-Day-Execution-Production-Deployment-Microservice-Traffic-Cutover-External-Interface-Coordination">6.8&nbsp;&nbsp;6.8 T-Day Execution: Production Deployment + Microservice Traffic Cutover + External-Interface Coordination</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-9-Retrospective">6.9&nbsp;&nbsp;6.9 Retrospective</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#7-Overall-Retrospective">7&nbsp;&nbsp;<b>7. Overall Retrospective</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#Technology-Stack-at-a-Glance">8&nbsp;&nbsp;<b>Technology Stack at a Glance</b></a>
+                    
+                </div>
+            </div>
+            
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Bank System Migration to Domestic Tech Stack: From CentOS Retirement to Internal Cloud Go-Live
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-12-01T20:10:10.000Z" itemprop="datePublished">Dec 1 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/TechLeadership/">TechLeadership</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            25 minutes read (About 3815 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>A practical walkthrough of a banking system migration under China’s XinChuang initiative—moving from CentOS to an internal cloud while coordinating Oracle Data Guard, Elasticsearch-to-OpenSearch transition, microservice containerization, and 14 external system interface changes, all within a single coordinated cutover window.</p>
+<span id="more"></span>
+
+<h2 id="1-Background-and-Challenges"><a href="#1-Background-and-Challenges" class="headerlink" title="1. Background and Challenges"></a>1. Background and Challenges</h2><p>Once the bank’s domestic technology (xinchuang) mandate was issued, all existing CentOS physical servers had to be decommissioned within the prescribed timeframe. At the same time, the bank’s architecture department made it clear: new servers should be provisioned on the internal cloud platform whenever possible. This meant we were not facing a simple “lift and shift” — it was a full-stack migration spanning the database, the search layer, the microservices, and external interfaces.</p>
+<p>Core constraints:</p>
+<ul>
+<li><strong>Database</strong>: Oracle → Oracle. Because of the data volume and the need for transactional consistency, it stayed on physical machines below the cloud boundary.</li>
+<li><strong>Search layer</strong>: Elasticsearch → OpenSearch, replaced together with the domestic tech migration.</li>
+<li><strong>Microservices</strong>: migrated in full to the internal cloud.</li>
+<li><strong>External interfaces</strong>: the IP address changed after migration, affecting a large number of external systems.</li>
+</ul>
+<h2 id="2-Migration-Overview-and-Layered-Strategy"><a href="#2-Migration-Overview-and-Layered-Strategy" class="headerlink" title="2. Migration Overview and Layered Strategy"></a>2. Migration Overview and Layered Strategy</h2><p>Faced with four different layers to migrate, the overall thinking was: <strong>let the test environment pave the way first, validate that the approach works, then push the production migration forward layer by layer according to risk level and data flow, with each layer independently rollbackable.</strong></p>
+<h3 id="Layered-Strategy"><a href="#Layered-Strategy" class="headerlink" title="Layered Strategy"></a>Layered Strategy</h3><pre><code class="highlight mermaid">graph TD
+    subgraph Phase Zero
+        A[Microservice Containerization&lt;br/&gt;in Test Environment]
+    end
+    subgraph Phase One
+        B[Database Migration&lt;br/&gt;Oracle RMAN + DG]
+    end
+    subgraph Phase Two
+        C[Search Layer Migration&lt;br/&gt;ES to OpenSearch]
+    end
+    subgraph Phase Three
+        D[Production Deploy + Traffic Cutover&lt;br/&gt;+ External Interface Switch&lt;br/&gt;in a Single Window]
+    end
+    A --&gt;|Validates the approach| B
+    A --&gt;|Validates the approach| C
+    B --&gt;|Data layer ready| D
+    C --&gt;|Search layer ready| D</code></pre>
+
+<h3 id="Core-Principles"><a href="#Core-Principles" class="headerlink" title="Core Principles"></a>Core Principles</h3><p><strong>Test environment first</strong>: containerization, the configuration center, and network policies were all validated in the test environment first, confirming there were no hidden traps before production migration began.</p>
+<p><strong>Every layer has an independent rollback path</strong>: the database has its old primary/standby, ES has the source cluster, microservices have the old instances, and external interfaces have a per-system fallback plan.</p>
+<p><strong>Layers are decoupled by interfaces</strong>: microservices keep running while the database and ES are switched over; external interfaces are not affected while microservices are switched — until the final unified window.</p>
+<p><strong>Coordination work is front-loaded</strong>: the approval process for external interfaces is long, so it starts on day one of the project, not after the technology is ready.</p>
+<h3 id="Execution-Order"><a href="#Execution-Order" class="headerlink" title="Execution Order"></a>Execution Order</h3><ol>
+<li><strong>Microservice containerization and integration testing in the test environment</strong> — done first, to validate that containerization works, the configuration center is usable, and read/write connectivity to the database and search layer is sound. No production environment touched.</li>
+<li><strong>Database migration</strong> — once the test environment is validated, the production database RMAN + DG migration begins. The data layer is the foundation of every upstream application and must be in place first.</li>
+<li><strong>Search layer migration</strong> — ES → OpenSearch, run in parallel with the production database migration, neither blocking the other.</li>
+<li><strong>Production microservice deployment + traffic cutover + external interface switch (unified window)</strong> — before T-day the cloud instances are deployed and pointed at the new production database (not yet taking traffic); in the T-day window: ① the gateway switches external traffic from the old physical machines to the cloud instances ② external systems update their call targets synchronously. Both are atomic.</li>
+</ol>
+<h3 id="Summary-of-Approaches-by-Layer"><a href="#Summary-of-Approaches-by-Layer" class="headerlink" title="Summary of Approaches by Layer"></a>Summary of Approaches by Layer</h3><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Approach</th>
+<th>Downtime Window</th>
+<th>Fallback</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Test validation</td>
+<td>Containerization + integration test against an independent test database</td>
+<td>No downtime</td>
+<td>Can be rerun at any time</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>RMAN + DG, two-stage</td>
+<td>Minutes</td>
+<td>Old primary/standby retained for switchback</td>
+</tr>
+<tr>
+<td>Search layer</td>
+<td>Snapshot + reindex + dual-write</td>
+<td>Minutes</td>
+<td>Source cluster retained read-only</td>
+</tr>
+<tr>
+<td>Microservices</td>
+<td>Containerization + configuration center</td>
+<td>Rolling release, no downtime</td>
+<td>Old instances retained, running in parallel</td>
+</tr>
+<tr>
+<td>External interfaces</td>
+<td>Matrix grooming → tiered approval → integration test → unified window</td>
+<td>Per agreed window</td>
+<td>Per-system rollback plan</td>
+</tr>
+</tbody></table>
+<h2 id="3-Test-Environment-First-Microservice-Containerization-and-Integration-Validation"><a href="#3-Test-Environment-First-Microservice-Containerization-and-Integration-Validation" class="headerlink" title="3. Test Environment First: Microservice Containerization and Integration Validation"></a>3. Test Environment First: Microservice Containerization and Integration Validation</h2><h3 id="3-1-Why-This-Comes-First"><a href="#3-1-Why-This-Comes-First" class="headerlink" title="3.1 Why This Comes First"></a>3.1 Why This Comes First</h3><p>The whole migration touches multiple new variables at once: containerization, configuration center onboarding, cloud-side network policies, and K8s orchestration. Trial-and-error directly in production would be unacceptably costly. So the first thing we did after project kickoff was: <strong>run the full microservice-to-cloud flow once in the test environment</strong>, to confirm there was no structural flaw in the approach itself.</p>
+<h3 id="3-2-Work-Done-in-the-Test-Environment"><a href="#3-2-Work-Done-in-the-Test-Environment" class="headerlink" title="3.2 Work Done in the Test Environment"></a>3.2 Work Done in the Test Environment</h3><ul>
+<li><strong>Containerization</strong>: adapted to K8s Deployment / StatefulSet, wrote the Dockerfile and deployment manifests.</li>
+<li><strong>Configuration center</strong>: connection strings, timeout parameters, and circuit-breaker rules were all centralized, pointing at an independent test database and test search cluster.</li>
+<li><strong>Network policies</strong>: security groups, whitelists, and dedicated-line connectivity between cloud-side Pods and the below-cloud database.</li>
+<li><strong>Logging and monitoring</strong>: integrated with the cloud platform’s logging service and APM.</li>
+<li><strong>End-to-end integration</strong>: verified that microservices on the cloud could correctly read from and write to the test database and test search cluster, and that business flows ran through.</li>
+</ul>
+<h3 id="3-3-Outputs-of-Successful-Validation"><a href="#3-3-Outputs-of-Successful-Validation" class="headerlink" title="3.3 Outputs of Successful Validation"></a>3.3 Outputs of Successful Validation</h3><p>Once the test environment validation passed, we had several key conclusions in hand:</p>
+<ul>
+<li>Containerization was feasible; image builds and K8s deployment had no blocking issues.</li>
+<li>The configuration center could correctly manage multi-environment parameters; switching environments required only a config change.</li>
+<li>Connectivity, latency, and connection-pool behavior between cloud-side Pods and the below-cloud database all met production requirements.</li>
+<li>Microservice compatibility with OpenSearch was confirmed (mappings, query syntax, aggregation behavior).</li>
+</ul>
+<p>These conclusions gave the team confidence. Subsequent production migration followed the same path, with no lingering doubt about whether the approach itself would work.</p>
+<h2 id="4-Database-Migration-RMAN-Lays-the-Foundation-Data-Guard-Takes-Over"><a href="#4-Database-Migration-RMAN-Lays-the-Foundation-Data-Guard-Takes-Over" class="headerlink" title="4. Database Migration: RMAN Lays the Foundation, Data Guard Takes Over"></a>4. Database Migration: RMAN Lays the Foundation, Data Guard Takes Over</h2><h3 id="4-1-Why-Two-Stages"><a href="#4-1-Why-Two-Stages" class="headerlink" title="4.1 Why Two Stages"></a>4.1 Why Two Stages</h3><p>The project adopted a “migrate the database first, migrate the applications later” phased strategy:</p>
+<ol>
+<li>The database data volume was in the terabytes; a one-shot outage would far exceed the maintenance window the bank would allow.</li>
+<li>Moving microservices to the cloud involved containerization and network policy adjustments, which take time.</li>
+<li>With the database in place first, the application side could fully test and integrate, reducing overall risk.</li>
+</ol>
+<h3 id="4-2-The-Migration-Plan-Document-and-Review"><a href="#4-2-The-Migration-Plan-Document-and-Review" class="headerlink" title="4.2 The Migration Plan Document and Review"></a>4.2 The Migration Plan Document and Review</h3><p>After settling on the “RMAN + DG two-stage” technical route, I did not start working right away. Instead, I first wrote the <strong>《Oracle Database Xinchuang Migration Operations Manual》</strong>, which became the sole basis for subsequent execution.</p>
+<p>The document was required to be <strong>executable down to the command level</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Document Element</th>
+<th>Requirement</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Time node</td>
+<td>Precise to the minute</td>
+<td><code>T-7 20:00 initiate level 0 full backup on the source DB</code></td>
+</tr>
+<tr>
+<td>Execution server</td>
+<td>Identified by hostname/IP</td>
+<td><code>Execute on db-old-master (10.x.x.11)</code></td>
+</tr>
+<tr>
+<td>Operation command</td>
+<td>Complete, copy-paste ready</td>
+<td><code>RMAN&gt; BACKUP INCREMENTAL LEVEL 0...</code></td>
+</tr>
+<tr>
+<td>Expected output</td>
+<td>What you should see after each command</td>
+<td><code>Finished backup at 2026-09-15 22:30</code></td>
+</tr>
+<tr>
+<td>Verification step</td>
+<td>How to confirm this step succeeded</td>
+<td><code>SELECT * FROM V$BACKUP_SET; should show a new record</code></td>
+</tr>
+<tr>
+<td>Exception handling</td>
+<td>What to do if a step fails</td>
+<td><code>If backup fails, check free space on the /backup mount point</code></td>
+</tr>
+<tr>
+<td>Rollback step</td>
+<td>Rollback action if the migration is aborted at any stage</td>
+<td><code>Tear down the new standby; the old primary/standby architecture stays unchanged</code></td>
+</tr>
+</tbody></table>
+<p>Once the document was ready, a <strong>project team review meeting</strong> was called. Attendees included:</p>
+<ul>
+<li>The client’s project manager</li>
+<li>The DBA team (the executing party)</li>
+<li>A representative from Operations (responsible for servers and network)</li>
+<li>A representative from the Architecture Office (reviewing compliance of the plan)</li>
+<li>A representative from the Security Office (reviewing whether the operation involved a security-affecting change)</li>
+<li>The application-side owner (confirming the downtime window was acceptable)</li>
+</ul>
+<p>The review went through the document line by line. Typical questions:</p>
+<ul>
+<li>“Before the T-day switchover, does the final incremental backup’s archive coverage include all redo threads?”</li>
+<li>“During new-standby recovery, will the source database’s archive-log cleanup policy delete archives that haven’t been shipped yet?”</li>
+<li>“How long is the observation period, and can the old primary/standby carry the load of being promoted again during it?”</li>
+</ul>
+<p>After revisions based on review feedback, the document was finalized, <strong>signed off by all parties</strong>, and filed with the change-management system. From then on, every operation was executed strictly by the document — no on-the-spot improvisation.</p>
+<blockquote>
+<p>The point of this step: database migration is a high-risk operation. You cannot run it on the basis of “I remember how to do it.” Writing out every step as an executable command, having all sides review it, and getting sign-off both protects you and shows respect for the production environment.</p>
+</blockquote>
+<h3 id="4-3-The-Source-Already-Had-Primary-Standby-the-New-Server-Joined-as-a-Third-Standby"><a href="#4-3-The-Source-Already-Had-Primary-Standby-the-New-Server-Joined-as-a-Third-Standby" class="headerlink" title="4.3 The Source Already Had Primary/Standby; the New Server Joined as a Third Standby"></a>4.3 The Source Already Had Primary/Standby; the New Server Joined as a Third Standby</h3><p>The source already had a Data Guard primary/standby architecture. Rather than “stop the database and export,” we added the new server as a <strong>third standby</strong> to the existing DG setup:</p>
+<pre><code class="highlight mermaid">graph LR
+    A[Old Primary&lt;br/&gt;CentOS physical machine] --&gt; B[Old Standby&lt;br/&gt;already exists, continues as DR]
+    A --&gt; C[New Standby&lt;br/&gt;new server, added after RMAN init]</code></pre>
+
+<p>This was <strong>zero-intrusion</strong> to production — the old primary and standby kept serving business, while the new database silently caught up as a “shadow standby.”</p>
+<h3 id="4-4-Stage-One-RMAN-Full-Backup-Initialization"><a href="#4-4-Stage-One-RMAN-Full-Backup-Initialization" class="headerlink" title="4.4 Stage One: RMAN Full Backup Initialization"></a>4.4 Stage One: RMAN Full Backup Initialization</h3><figure class="highlight sql hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">RMAN<span class="hljs-operator">&gt;</span> BACKUP INCREMENTAL LEVEL <span class="hljs-number">0</span> DATABASE FORMAT <span class="hljs-string">'/backup/full_%U'</span>;</span><br><span class="line">RMAN<span class="hljs-operator">&gt;</span> BACKUP <span class="hljs-keyword">CURRENT</span> CONTROLFILE <span class="hljs-keyword">FOR</span> STANDBY FORMAT <span class="hljs-string">'/backup/ctl_stby_%U'</span>;</span><br><span class="line">RMAN<span class="hljs-operator">&gt;</span> BACKUP ARCHIVELOG <span class="hljs-keyword">ALL</span> FORMAT <span class="hljs-string">'/backup/arch_%U'</span>;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Restoring on the new server:</p>
+<figure class="highlight sql hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">RMAN<span class="hljs-operator">&gt;</span> STARTUP NOMOUNT;</span><br><span class="line">RMAN<span class="hljs-operator">&gt;</span> RESTORE CONTROLFILE <span class="hljs-keyword">FROM</span> <span class="hljs-string">'/backup/ctl_stby_xxx'</span>;</span><br><span class="line">RMAN<span class="hljs-operator">&gt;</span> <span class="hljs-keyword">ALTER</span> DATABASE MOUNT STANDBY DATABASE;</span><br><span class="line">RMAN<span class="hljs-operator">&gt;</span> CATALOG <span class="hljs-keyword">START</span> <span class="hljs-keyword">WITH</span> <span class="hljs-string">'/backup/full_'</span>;</span><br><span class="line">RMAN<span class="hljs-operator">&gt;</span> RESTORE DATABASE;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Terabytes of historical data were moved over in one pass as a <strong>block-level copy</strong>, while the source database stayed online the whole time.</p>
+<h3 id="4-5-Stage-Two-Configure-Data-Guard-for-Real-Time-Synchronization"><a href="#4-5-Stage-Two-Configure-Data-Guard-for-Real-Time-Synchronization" class="headerlink" title="4.5 Stage Two: Configure Data Guard for Real-Time Synchronization"></a>4.5 Stage Two: Configure Data Guard for Real-Time Synchronization</h3><p>After RMAN recovery completed, we manually shipped and caught up on archives to close part of the gap, then formally configured DG:</p>
+<figure class="highlight sql hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-comment">-- Add a third archive destination on the primary</span></span><br><span class="line"><span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">SYSTEM</span> <span class="hljs-keyword">SET</span> LOG_ARCHIVE_DEST_3<span class="hljs-operator">=</span></span><br><span class="line">  <span class="hljs-string">'SERVICE=orcl_newstby LGWR ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=orcl_newstby'</span>;</span><br><span class="line"><span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">SYSTEM</span> <span class="hljs-keyword">SET</span> LOG_ARCHIVE_DEST_STATE_3<span class="hljs-operator">=</span>ENABLE;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Start MRP on the new standby:</p>
+<figure class="highlight sql hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">ALTER</span> DATABASE RECOVER MANAGED STANDBY DATABASE <span class="hljs-keyword">DISCONNECT</span> <span class="hljs-keyword">FROM</span> SESSION;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>From then on, redo was shipped in real time and applied automatically, with primary/standby lag converging to single-digit seconds.</p>
+<h3 id="4-6-The-Cutover-Window-Switchover"><a href="#4-6-The-Cutover-Window-Switchover" class="headerlink" title="4.6 The Cutover Window: Switchover"></a>4.6 The Cutover Window: Switchover</h3><p>Once catch-up was verified, a switchover was executed during a low-traffic period:</p>
+<figure class="highlight sql hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-comment">-- On the original primary</span></span><br><span class="line"><span class="hljs-keyword">ALTER</span> DATABASE <span class="hljs-keyword">COMMIT</span> <span class="hljs-keyword">TO</span> SWITCHOVER <span class="hljs-keyword">TO</span> STANDBY <span class="hljs-keyword">WITH</span> SESSION SHUTDOWN;</span><br><span class="line"><span class="hljs-comment">-- On the new standby</span></span><br><span class="line"><span class="hljs-keyword">ALTER</span> DATABASE <span class="hljs-keyword">COMMIT</span> <span class="hljs-keyword">TO</span> SWITCHOVER <span class="hljs-keyword">TO</span> <span class="hljs-keyword">PRIMARY</span>;</span><br><span class="line"><span class="hljs-keyword">ALTER</span> DATABASE <span class="hljs-keyword">OPEN</span>;</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Actual business interruption was held to <strong>minutes</strong>. The old primary and old standby were retained as a fallback and decommissioned after the observation period.</p>
+<h2 id="5-Search-Layer-Migration-Elasticsearch-→-OpenSearch"><a href="#5-Search-Layer-Migration-Elasticsearch-→-OpenSearch" class="headerlink" title="5. Search Layer Migration: Elasticsearch → OpenSearch"></a>5. Search Layer Migration: Elasticsearch → OpenSearch</h2><h3 id="5-1-Why-It-Is-Not-a-Simple-“Copy”"><a href="#5-1-Why-It-Is-Not-a-Simple-“Copy”" class="headerlink" title="5.1 Why It Is Not a Simple “Copy”"></a>5.1 Why It Is Not a Simple “Copy”</h3><p>OpenSearch forked from Elasticsearch at 7.10.2; from 7.11 onward, snapshot formats are mutually incompatible. The source cluster straddled that boundary, so a combined approach was required.</p>
+<h3 id="5-2-Full-Load-Snapshot-Baseline"><a href="#5-2-Full-Load-Snapshot-Baseline" class="headerlink" title="5.2 Full Load: Snapshot Baseline"></a>5.2 Full Load: Snapshot Baseline</h3><p>For indices at 7.10 and below, a shared-storage snapshot was used for recovery:</p>
+<figure class="highlight json hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">PUT _snapshot/os_mig_repo</span><br><span class="line"><span class="hljs-punctuation">{</span></span><br><span class="line">  <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"s3"</span><span class="hljs-punctuation">,</span></span><br><span class="line">  <span class="hljs-attr">"settings"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">"bucket"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"os-mig-bucket"</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">"base_path"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"es_snap"</span> <span class="hljs-punctuation">}</span></span><br><span class="line"><span class="hljs-punctuation">}</span></span><br><span class="line">PUT _snapshot/os_mig_repo/snap_20260922?wait_for_completion=<span class="hljs-literal"><span class="hljs-keyword">true</span></span></span><br><span class="line"><span class="hljs-punctuation">{</span></span><br><span class="line">  <span class="hljs-attr">"indices"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"app_log*,cust_search*"</span><span class="hljs-punctuation">,</span></span><br><span class="line">  <span class="hljs-attr">"include_global_state"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span></span><br><span class="line"><span class="hljs-punctuation">}</span></span><br></pre></td></tr></tbody></table></figure>
+
+<p>The target OpenSearch cluster restored from the snapshot, establishing the historical-data baseline.</p>
+<h3 id="5-3-Incremental-Remote-Reindex-Dual-Write-Catch-Up"><a href="#5-3-Incremental-Remote-Reindex-Dual-Write-Catch-Up" class="headerlink" title="5.3 Incremental: Remote Reindex + Dual-Write Catch-Up"></a>5.3 Incremental: Remote Reindex + Dual-Write Catch-Up</h3><p>For 7.11+ indices and continuously written indices, remote reindex was used to pull the increment:</p>
+<figure class="highlight json hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">POST _reindex?wait_for_completion=<span class="hljs-literal"><span class="hljs-keyword">false</span></span></span><br><span class="line"><span class="hljs-punctuation">{</span></span><br><span class="line">  <span class="hljs-attr">"source"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span></span><br><span class="line">    <span class="hljs-attr">"remote"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">"host"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"http://old-es:9200"</span> <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span></span><br><span class="line">    <span class="hljs-attr">"index"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"app_log-2026.09"</span></span><br><span class="line">  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span></span><br><span class="line">  <span class="hljs-attr">"dest"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">"index"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"app_log-2026.09_os"</span> <span class="hljs-punctuation">}</span></span><br><span class="line"><span class="hljs-punctuation">}</span></span><br></pre></td></tr></tbody></table></figure>
+
+<p>A message-queue dual-write was layered on top to ensure no new data was lost during the migration period.</p>
+<h3 id="5-4-Metadata-and-Configuration-Migration"><a href="#5-4-Metadata-and-Configuration-Migration" class="headerlink" title="5.4 Metadata and Configuration Migration"></a>5.4 Metadata and Configuration Migration</h3><table>
+<thead>
+<tr>
+<th>Source (ES)</th>
+<th>Target (OpenSearch)</th>
+<th>Handling</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ILM policies</td>
+<td>ISM policies</td>
+<td>Rewrite the policy JSON</td>
+</tr>
+<tr>
+<td>Index Template</td>
+<td>Component Template + Index Template</td>
+<td>Adapt the format</td>
+</tr>
+<tr>
+<td>Ingest Pipeline</td>
+<td>Ingest Pipeline</td>
+<td>Validate compatibility one by one</td>
+</tr>
+<tr>
+<td>Kibana objects</td>
+<td>OpenSearch Dashboards</td>
+<td>Export/import + manual fixes</td>
+</tr>
+<tr>
+<td>Security configuration</td>
+<td>OpenSearch Security</td>
+<td>Rebuild users / roles / tenants</td>
+</tr>
+</tbody></table>
+<h3 id="5-5-Switchover-Alias-Routing"><a href="#5-5-Switchover-Alias-Routing" class="headerlink" title="5.5 Switchover: Alias Routing"></a>5.5 Switchover: Alias Routing</h3><p>Applications access indices through aliases. At switchover, only the alias target changes; read/write traffic is routed through the gateway, so the application side is barely aware.</p>
+<h2 id="6-Microservice-Cloud-Migration-and-External-Interface-Coordinated-Switchover"><a href="#6-Microservice-Cloud-Migration-and-External-Interface-Coordinated-Switchover" class="headerlink" title="6. Microservice Cloud Migration and External-Interface Coordinated Switchover"></a>6. Microservice Cloud Migration and External-Interface Coordinated Switchover</h2><h3 id="6-1-Why-They-Must-Be-Bound-Together"><a href="#6-1-Why-They-Must-Be-Bound-Together" class="headerlink" title="6.1 Why They Must Be Bound Together"></a>6.1 Why They Must Be Bound Together</h3><p>Moving microservices to the cloud is not a standalone action. The entry address exposed by cloud-side microservices (gateway VIP / domain name) differs from that of the old physical-machine environment. This means <strong>the moment microservices cut over to the cloud, every external system’s call target must be updated at the same time</strong>. If microservices move to the cloud first and external interfaces switch later, external systems calling the old address fail for the whole intervening window; conversely, if external systems change their address first while microservices have not yet cut over, every call times out.</p>
+<p>So microservice cloud migration and the external-interface switchover were merged into <strong>one coordinated operation within a single unified window</strong>: production deployment ready + gateway traffic switchover + external systems updating call targets synchronously, atomic.</p>
+<h3 id="6-2-Production-Deployment-and-T-Day-Traffic-Cutover"><a href="#6-2-Production-Deployment-and-T-Day-Traffic-Cutover" class="headerlink" title="6.2 Production Deployment and T-Day Traffic Cutover"></a>6.2 Production Deployment and T-Day Traffic Cutover</h3><p>Before T-day, the cloud-side production instances were fully deployed:</p>
+<ul>
+<li>Image built, K8s resources created, configuration center pointed at the new production database.</li>
+<li>Instances started up, but <strong>taking no external traffic</strong> (gateway weights kept all traffic on the old physical machines).</li>
+<li>Internal health checks and connectivity verification completed.</li>
+</ul>
+<p>Traffic cutover was executed in the T-day window — see section 6.8.</p>
+<h3 id="6-3-The-Call-Relationship-Matrix-Maintained-Day-to-Day-Reused-at-the-Critical-Moment"><a href="#6-3-The-Call-Relationship-Matrix-Maintained-Day-to-Day-Reused-at-the-Critical-Moment" class="headerlink" title="6.3 The Call-Relationship Matrix: Maintained Day to Day, Reused at the Critical Moment"></a>6.3 The Call-Relationship Matrix: Maintained Day to Day, Reused at the Critical Moment</h3><p>The call-relationship matrix was something our team <strong>proactively maintained during day-to-day operations</strong> — recognizing early on that external-dependency grooming could not wait until migration kicked off. We continuously recorded each external system’s call direction, interface inventory, owner, and change history. Once this migration started, we simply filtered the matrix for every external system that called our interfaces, forming an initial list, then cross-validated it against gateway logs and firewall policies to confirm nothing was missed. The final count came to <strong>14 external systems</strong>, covering core accounting, credit, mobile-banking back end, third-party payment, regulatory reporting, and the risk-control engine.</p>
+<h3 id="6-4-Producing-the-Plan-and-Reporting-to-the-Client’s-Project-Manager"><a href="#6-4-Producing-the-Plan-and-Reporting-to-the-Client’s-Project-Manager" class="headerlink" title="6.4 Producing the Plan and Reporting to the Client’s Project Manager"></a>6.4 Producing the Plan and Reporting to the Client’s Project Manager</h3><p>With the list in hand, I compiled a <strong>《External Interface Coordinated Upgrade Plan》</strong> and submitted it to the client’s project manager. It included:</p>
+<table>
+<thead>
+<tr>
+<th>Plan Item</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Scope of impact</td>
+<td>List of 14 external systems + the interfaces called</td>
+</tr>
+<tr>
+<td>Tiered classification</td>
+<td>Three classes A/B/C (config change only / code change required / re-integration testing required)</td>
+</tr>
+<tr>
+<td>Timeline</td>
+<td>Back-scheduled: T-4 weeks preparation → T-1 week integration testing → T-day switchover</td>
+</tr>
+<tr>
+<td>Owners per system</td>
+<td>Name + department + contact information</td>
+</tr>
+<tr>
+<td>Risks and degradation plan</td>
+<td>Fallback for a single system failing</td>
+</tr>
+<tr>
+<td>Approvals required</td>
+<td>Joint upgrade request, change ticket, director sign-off items</td>
+</tr>
+</tbody></table>
+<p>The core purpose of this plan was to make the scale and complexity visible to the client’s project manager, so they could get the authority to push other departments to cooperate.</p>
+<h3 id="6-5-Pushing-the-Approvals-Some-Changes-Need-a-Director’s-Signature"><a href="#6-5-Pushing-the-Approvals-Some-Changes-Need-a-Director’s-Signature" class="headerlink" title="6.5 Pushing the Approvals: Some Changes Need a Director’s Signature"></a>6.5 Pushing the Approvals: Some Changes Need a Director’s Signature</h3><p>In a bank, you cannot just change things because you say so. The 14 systems fell into three categories by type of change:</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Count</th>
+<th>Change Required</th>
+<th>Approval Level</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>A: config change only</td>
+<td>6</td>
+<td>Change hosts / DNS / gateway upstream</td>
+<td>System owner approval</td>
+</tr>
+<tr>
+<td>B: code change required</td>
+<td>5</td>
+<td>Hardcoded IP must be changed, then compiled, tested, released</td>
+<td>The other side’s release plan + test approval</td>
+</tr>
+<tr>
+<td>C: re-integration required</td>
+<td>3</td>
+<td>Certificate reissuance, firewall change, contract adjustment</td>
+<td>Security-affecting change; director sign-off required</td>
+</tr>
+</tbody></table>
+<p>The approval flow was as follows:</p>
+<pre><code class="highlight mermaid">flowchart TD
+    A[We issue the Joint Upgrade Request Letter] --&gt; B[Client project manager reviews and signs]
+    B --&gt; C{Has a security-affecting change?}
+    C --&gt;|Yes| D[Sent to the Information Security Office for review]
+    D --&gt; E[Information Security Office director signs]
+    E --&gt; F{Does it need the deputy head's signature?}
+    F --&gt;|Yes| G[Deputy head signs]
+    F --&gt;|No| H[Operations files it]
+    G --&gt; H
+    C --&gt;|No| H
+    H --&gt; I[Included in the joint change window]
+    I --&gt; J[Each external system starts internal dev/test against the signed document]</code></pre>
+
+<p><strong>The hard part is queuing for the signature.</strong> A director’s sign-off goes to a meeting for discussion, requires a risk assessment, and must confirm it does not fall in a regulatory-inspection blackout period. From submitting a request to receiving approval, the fastest turnaround was five working days; some took one to two weeks. So the plan explicitly stated: the approval process must be started early — it cannot wait for the technology to be ready.</p>
+<h3 id="6-6-Issuing-Formal-Requests-Pushing-System-by-System"><a href="#6-6-Issuing-Formal-Requests-Pushing-System-by-System" class="headerlink" title="6.6 Issuing Formal Requests, Pushing System by System"></a>6.6 Issuing Formal Requests, Pushing System by System</h3><p>Once framework-level agreement was secured, a <strong>formal letter</strong> was issued to each external system (via the bank’s internal OA plus a paper copy, run in parallel):</p>
+<ul>
+<li>Letter content: the migration background, the new IP, the changes the other side needed to make, the deadline, and the contact person.</li>
+<li>A written confirmation was required within five working days.</li>
+<li>Classes B and C received an additional 《Interface Change Technical Specification》.</li>
+</ul>
+<p>The purpose of this step was <strong>to leave a paper trail</strong> — in a bank, a verbal “yes” does not count; there must be written confirmation.</p>
+<p>Actual feedback: 8 systems confirmed within 3 days; 4 asked for a delay (coordinated and rescheduled to the next window); 2 initially replied “cannot cooperate” (both ultimately agreed after the client’s project manager stepped in).</p>
+<h3 id="6-7-Integration-Testing-in-the-Test-Environment"><a href="#6-7-Integration-Testing-in-the-Test-Environment" class="headerlink" title="6.7 Integration Testing in the Test Environment"></a>6.7 Integration Testing in the Test Environment</h3><p>A test instance was deployed on the new servers, a test IP assigned, and each external system was verified one by one:</p>
+<ul>
+<li>Class A: change the config, then call directly; verify the request arrives and the response is correct.</li>
+<li>Class B: deploy the new version in the test environment after the code change, run the full business flow end to end.</li>
+<li>Class C: reissue certificates + temporarily open the firewall + run the full interface-contract test.</li>
+</ul>
+<p>An 《Integration Test Confirmation Form》 was produced, with each system signing off that “test-environment validation passed.”</p>
+<p>The integration testing exposed two problems:</p>
+<ul>
+<li>One system had a <strong>second hardcoded IP</strong> hidden in another part of its config file (they were unaware of it themselves).</li>
+<li>One system’s firewall had port 80 open but not 443 — HTTP worked in the test environment, but HTTPS failed in production.</li>
+</ul>
+<p><strong>If those two traps had not been exposed in the test environment, they would have been incidents on T-day.</strong></p>
+<h3 id="6-8-T-Day-Execution-Production-Deployment-Microservice-Traffic-Cutover-External-Interface-Coordination"><a href="#6-8-T-Day-Execution-Production-Deployment-Microservice-Traffic-Cutover-External-Interface-Coordination" class="headerlink" title="6.8 T-Day Execution: Production Deployment + Microservice Traffic Cutover + External-Interface Coordination"></a>6.8 T-Day Execution: Production Deployment + Microservice Traffic Cutover + External-Interface Coordination</h3><figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">T-3 days   Cloud production instances deployed; config center pointed at new prod DB; instances up (not taking traffic)</span><br><span class="line">T-1 day    Final checks: instance health, connection pool normal, DB/ES connectivity verified</span><br><span class="line">00:00      T-day window opens: stop application writes; old physical-machine instances stop taking new requests</span><br><span class="line">00:10      Gateway traffic cutover: external requests routed from old physical-machine IP to new cloud VIP</span><br><span class="line">00:15      Each external system verifies connectivity against the checklist (calling the new cloud address)</span><br><span class="line">00:45      All verifications pass; business traffic reopened</span><br><span class="line">01:00      Microservice cloud migration complete; external interface switchover complete</span><br><span class="line">01:30      Observation period begins; all systems remain on standby</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Of the 14 external systems, 12 passed on the first try; 1 had a missed config change (hot-fixed on site); 1 had an incomplete certificate chain (temporarily switched back to the old IP in read-only mode, fixed the next day).</p>
+<h3 id="6-9-Retrospective"><a href="#6-9-Retrospective" class="headerlink" title="6.9 Retrospective"></a>6.9 Retrospective</h3><blockquote>
+<p>Binding the microservice cloud migration and the external-interface switchover together was one of the most important lessons of this migration. Neither is technically complex — containerization is a mature approach, and changing a call address is trivial. But splitting them into two separate windows would have meant external-system call failures during any gap in between. Merging them into a single window doubled the coordination difficulty (getting external systems to change their addresses on the same night), but at least guaranteed the atomicity of the cutover.</p>
+<p>Separately, all microservice refactoring and integration testing were done in the test environment; the production window only handled deployment and traffic cutover — which kept the T-day operation simple and predictable. The cloud instances were deployed and ready in advance but took no traffic; on T-day we only had to flip that one “switch” at the gateway, compressing the risk window to its shortest.</p>
+<p>Getting 14 external systems to cooperate with you requires:</p>
+<ul>
+<li><strong>Foresight</strong>: the call-relationship matrix was maintained day to day and reused as soon as migration kicked off.</li>
+<li><strong>Planning first</strong>: lay out the scope, tiers, timeline, and approval needs, then get authorization from the project manager to push other departments.</li>
+<li><strong>Process awareness</strong>: security-affecting changes need a director’s signature and can queue for a week or two, so the approval process must start early.</li>
+<li><strong>Paper trails</strong>: formal letters, written confirmations, integration-test sign-offs — every step documented.</li>
+<li><strong>Testing discipline</strong>: even when the other side says “we only changed an IP,” the test environment must run it end to end.</li>
+<li><strong>Degradation and fallback</strong>: on cutover night there was a plan for “one system failing does not break the whole.”</li>
+</ul>
+<p>One line sums it up: <strong>the technical plan took two weeks to settle; the coordination process ran six.</strong> In a bank migration, your technical ability determines whether you can move it; your coordination and process ability determine whether you finish.</p>
+</blockquote>
+<h2 id="7-Overall-Retrospective"><a href="#7-Overall-Retrospective" class="headerlink" title="7. Overall Retrospective"></a>7. Overall Retrospective</h2><table>
+<thead>
+<tr>
+<th>Workstream</th>
+<th>Approach</th>
+<th>Downtime Window</th>
+<th>Biggest Risk</th>
+<th>Fallback</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Test validation</td>
+<td>Containerization + integration test against an independent test DB</td>
+<td>No downtime</td>
+<td>The approach itself is infeasible</td>
+<td>Can be rerun at any time</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>RMAN + DG, two-stage</td>
+<td>Minutes</td>
+<td>Final incremental catch-up fails</td>
+<td>Old primary/standby retained for switchback</td>
+</tr>
+<tr>
+<td>ES → OpenSearch</td>
+<td>Snapshot + reindex + dual-write</td>
+<td>Minutes</td>
+<td>Mapping incompatibility</td>
+<td>Source cluster retained read-only</td>
+</tr>
+<tr>
+<td>Microservices</td>
+<td>Containerization + configuration center</td>
+<td>Rolling release, no downtime</td>
+<td>Cloud-side network policy</td>
+<td>Old instances retained, running in parallel</td>
+</tr>
+<tr>
+<td>External interfaces</td>
+<td>Matrix grooming → tiered approval → integration test → unified window</td>
+<td>Per agreed window</td>
+<td>Cooperation from external systems</td>
+<td>Per-system rollback plan</td>
+</tr>
+</tbody></table>
+<p>Three core lessons:</p>
+<ol>
+<li><strong>Test environment first</strong> — containerization, the configuration center, and network policies were all proven out in the test environment, confirming the approach had no hidden traps, before production migration began.</li>
+<li><strong>Microservices and external interfaces must move together</strong> — once the external address changes, there is no such thing as “cut over halfway”; refactoring and integration testing happen in the test environment, while the production window only handles deployment and traffic cutover.</li>
+<li><strong>Always keep a way back</strong> — at every stage, ensure the source side remains rollbackable.</li>
+</ol>
+<h2 id="Technology-Stack-at-a-Glance"><a href="#Technology-Stack-at-a-Glance" class="headerlink" title="Technology Stack at a Glance"></a>Technology Stack at a Glance</h2><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Database</td>
+<td>Oracle EE 19c · Data Guard · RMAN · Switchover</td>
+</tr>
+<tr>
+<td>Search</td>
+<td>Elasticsearch → OpenSearch · Snapshot/Restore · Remote Reindex</td>
+</tr>
+<tr>
+<td>Application</td>
+<td>Spring Cloud · K8s · Internal cloud platform · Configuration center</td>
+</tr>
+<tr>
+<td>Coordination</td>
+<td>Call-relationship matrix · Joint upgrade plan · Director approval · Integration-test confirmation form</td>
+</tr>
+</tbody></table>
+<hr>
+<p><em>Author: a technical manager who has weathered the waves of domestic-tech migration in a bank. The above is a summary of real project experience; details have been anonymized.</em></p>
+<!-- hexo injector body_end start -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    mermaid.initialize({"startOnLoad":true});
+  });
+</script>
+<!-- hexo injector body_end end --></body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Banking-IT/">#Banking IT</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/XinChuang/">#XinChuang</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/CentOS-Migration/">#CentOS Migration</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Oracle-Data-Guard/">#Oracle Data Guard</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/OpenSearch/">#OpenSearch</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Kubernetes/">#Kubernetes</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Microservices/">#Microservices</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Change-Management/">#Change Management</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/posts/2026/05/09/Outdoor_Aquaculture_IoT_System/">Outdoor Aquaculture IoT System — Architecture Design Document &amp; Technical Validation</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/posts/2024/09/01/How_I_Standardized_Frontend-Backend_Collaboration/">How I Standardized Frontend-Backend Collaboration as a Tech Lead</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-hidden-mobile"></div>
+
+            
+            
+        </div>
+    </div>
+</footer>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
+    <style>
+        .hljs {
+            position: relative;
+        }
+
+        .hljs .clipboard-btn {
+            float: right;
+            color: #9a9a9a;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .hljs .clipboard-btn:hover {
+          color: #8a8a8a;
+        }
+
+        .hljs > .clipboard-btn {
+            display: none;
+            position: absolute;
+            right: 4px;
+            top: 4px;
+        }
+
+        .hljs:hover > .clipboard-btn {
+            display: inline;
+        }
+
+        .hljs > figcaption > .clipboard-btn {
+            margin-right: 4px;
+        }
+    </style>
+    <script>
+      $(document).ready(function () {
+        $('figure.hljs').each(function(i, figure) {
+          var codeId = 'code-' + i;
+          var code = figure.querySelector('.code');
+          var copyButton = $('<button>Copy <i class="far fa-clipboard"></i></button>');
+          code.id = codeId;
+          copyButton.addClass('clipboard-btn');
+          copyButton.attr('data-clipboard-target-id', codeId);
+
+          var figcaption = figure.querySelector('figcaption');
+
+          if (figcaption) {
+            figcaption.append(copyButton[0]);
+          } else {
+            figure.prepend(copyButton[0]);
+          }
+        })
+
+        var clipboard = new ClipboardJS('.clipboard-btn', {
+          target: function(trigger) {
+            return document.getElementById(trigger.getAttribute('data-clipboard-target-id'));
+          }
+        });
+        clipboard.on('success', function(e) {
+          e.clearSelection();
+        })
+      })
+    </script>
+
+    
+    
+
+    
+
+
+
+<script src="/js/script.js"></script>
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+            BASE_URL: '/',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>

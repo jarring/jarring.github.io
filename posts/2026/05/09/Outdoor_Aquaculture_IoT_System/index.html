@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>Outdoor Aquaculture IoT System — Architecture Design Document &amp; Technical Validation - Blogger</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<meta name="description" content="Hexo theme - Blogger">
+
+
+
+
+
+    <meta name="description" content="A technical design and ADR document for a large-scale aquaculture IoT system (3000–5000 ponds), covering MQTT edge architecture, edge autonomy under 4G instability, message storm defense, time-series">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Outdoor Aquaculture IoT System — Architecture Design Document &amp; Technical Validation">
+<meta property="og:url" content="http://localhost:4000/posts/2026/05/09/Outdoor_Aquaculture_IoT_System/index.html">
+<meta property="og:site_name" content="Blogger">
+<meta property="og:description" content="A technical design and ADR document for a large-scale aquaculture IoT system (3000–5000 ponds), covering MQTT edge architecture, edge autonomy under 4G instability, message storm defense, time-series">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2026-05-09T14:01:00.000Z">
+<meta property="article:modified_time" content="2026-09-24T07:05:35.877Z">
+<meta property="article:author" content="Blogger">
+<meta property="article:tag" content="Aquaculture">
+<meta property="article:tag" content="EMQX">
+<meta property="article:tag" content="Edge Computing">
+<meta property="article:tag" content="MQTT">
+<meta property="article:tag" content="TDengine">
+<meta property="article:tag" content="Time-Series Database">
+<meta name="twitter:card" content="summary">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<!-- <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro"> -->
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+
+
+<meta name="generator" content="Hexo 8.1.2"></head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    🐝
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Document-Metadata">1&nbsp;&nbsp;<b>Document Metadata</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#1-Background-Constraints">2&nbsp;&nbsp;<b>1. Background &amp;amp; Constraints</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#1-1-Business-Scenario">2.1&nbsp;&nbsp;1.1 Business Scenario</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#1-2-Core-Contradictions">2.2&nbsp;&nbsp;1.2 Core Contradictions</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#1-3-Technical-Constraints">2.3&nbsp;&nbsp;1.3 Technical Constraints</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#2-POC-Phase-Technical-Validation">3&nbsp;&nbsp;<b>2. POC-Phase Technical Validation</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#2-1-Scope-of-Validation">3.1&nbsp;&nbsp;2.1 Scope of Validation</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#2-2-Communication-Protocol-Validation">3.2&nbsp;&nbsp;2.2 Communication-Protocol Validation</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#2-3-Video-AI-Validation">3.3&nbsp;&nbsp;2.3 Video-AI Validation</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#2-4-Bandwidth-Cost-Validation">3.4&nbsp;&nbsp;2.4 Bandwidth-Cost Validation</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#3-Core-Architecture-Decisions-ADR">4&nbsp;&nbsp;<b>3. Core Architecture Decisions (ADR)</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#ADR-001-Edge-Autonomy-vs-Cloud-Centralized-Control">4.1&nbsp;&nbsp;ADR-001: Edge Autonomy vs. Cloud-Centralized Control</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#ADR-002-MQTT-Broker-Selection">4.2&nbsp;&nbsp;ADR-002: MQTT Broker Selection</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#ADR-003-Time-Series-Data-Store-Selection">4.3&nbsp;&nbsp;ADR-003: Time-Series Data-Store Selection</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#ADR-004-Edge-Computing-Hardware-Platform">4.4&nbsp;&nbsp;ADR-004: Edge-Computing Hardware Platform</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#ADR-005-Offline-Autonomy-Strategy">4.5&nbsp;&nbsp;ADR-005: Offline-Autonomy Strategy</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#ADR-006-Client-Real-Time-Communication">4.6&nbsp;&nbsp;ADR-006: Client Real-Time Communication</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#4-Scaling-Roadmap">5&nbsp;&nbsp;<b>4. Scaling Roadmap</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#4-1-POC-→-MVP-0–12-Months">5.1&nbsp;&nbsp;4.1 POC → MVP (0–12 Months)</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#4-2-MVP-→-1000-Customers-1–3-Years">5.2&nbsp;&nbsp;4.2 MVP → 1000+ Customers (1–3 Years)</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#4-3-1000-→-5000-Customers-3-Years">5.3&nbsp;&nbsp;4.3 1000+ → 5000+ Customers (3+ Years)</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#5-Dedicated-Design-for-1000-Customers">6&nbsp;&nbsp;<b>5. Dedicated Design for 1000+ Customers</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#5-1-Multi-Tenant-Isolation">6.1&nbsp;&nbsp;5.1 Multi-Tenant Isolation</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Problem-Statement">6.1.1&nbsp;&nbsp;Problem Statement</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Solution-Design">6.1.2&nbsp;&nbsp;Solution Design</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Specific-Parameters">6.1.3&nbsp;&nbsp;Specific Parameters</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#5-2-Message-Storm-Mitigation">6.2&nbsp;&nbsp;5.2 Message-Storm Mitigation</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Problem-Statement-1">6.2.1&nbsp;&nbsp;Problem Statement</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Design-Principles">6.2.2&nbsp;&nbsp;Design Principles</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Solution-Design-Four-Layer-Defense">6.2.3&nbsp;&nbsp;Solution Design: Four-Layer Defense</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Detailed-Parameters-by-Layer">6.2.4&nbsp;&nbsp;Detailed Parameters by Layer</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Comparison-with-the-“Circuit-Breaker”-Approach">6.2.5&nbsp;&nbsp;Comparison with the “Circuit Breaker” Approach</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#State-Transitions">6.2.6&nbsp;&nbsp;State Transitions</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Validation-Argumentation-Status">6.2.7&nbsp;&nbsp;Validation / Argumentation Status</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#5-3-Connection-Management">6.3&nbsp;&nbsp;5.3 Connection Management</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Problem-Statement-2">6.3.1&nbsp;&nbsp;Problem Statement</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Solution-Design-1">6.3.2&nbsp;&nbsp;Solution Design</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#5-4-Operations-Maintenance-System">6.4&nbsp;&nbsp;5.4 Operations &amp;amp; Maintenance System</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Problem-Statement-3">6.4.1&nbsp;&nbsp;Problem Statement</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Solution-Design-2">6.4.2&nbsp;&nbsp;Solution Design</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#5-5-Cost-Control">6.5&nbsp;&nbsp;5.5 Cost Control</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Problem-Statement-4">6.5.1&nbsp;&nbsp;Problem Statement</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#Solution-Design-3">6.5.2&nbsp;&nbsp;Solution Design</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#6-Internal-Architecture-of-an-Edge-Node">7&nbsp;&nbsp;<b>6. Internal Architecture of an Edge Node</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-1-Core-Module-Description">7.1&nbsp;&nbsp;6.1 Core Module Description</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-2-Offline-Autonomy-State-Machine">7.2&nbsp;&nbsp;6.2 Offline-Autonomy State Machine</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#7-Hardware-Selection-Comparison">8&nbsp;&nbsp;<b>7. Hardware-Selection Comparison</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#8-Validation-Status-Review-Risk-List">9&nbsp;&nbsp;<b>8. Validation-Status Review &amp;amp; Risk List</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#8-1-Validated-Items-Code-Prototype-Runnable">9.1&nbsp;&nbsp;8.1 Validated Items (Code Prototype Runnable)</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#8-2-Pending-Items-Corresponding-Risks">9.2&nbsp;&nbsp;8.2 Pending Items &amp;amp; Corresponding Risks</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#8-3-Key-Architectural-Insights">9.3&nbsp;&nbsp;8.3 Key Architectural Insights</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#9-Appendix">10&nbsp;&nbsp;<b>9. Appendix</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#9-1-Message-Volume-Quick-Calculation">10.1&nbsp;&nbsp;9.1 Message-Volume Quick Calculation</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#9-2-Scaling-Quick-Reference-Table">10.2&nbsp;&nbsp;9.2 Scaling Quick-Reference Table</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#9-3-Latency-Budget-Floating-Head-Alert-Chain">10.3&nbsp;&nbsp;9.3 Latency Budget (Floating-Head Alert Chain)</a>
+                    
+                </div>
+            </div>
+            
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            Outdoor Aquaculture IoT System — Architecture Design Document &amp; Technical Validation
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2026-05-09T14:01:00.000Z" itemprop="datePublished">May 9 2026</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Architecture-Design/">Architecture Design</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            31 minutes read (About 4628 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>A technical design and ADR document for a large-scale aquaculture IoT system (3000–5000 ponds), covering MQTT edge architecture, edge autonomy under 4G instability, message storm defense, time-series storage, and multi-tenant isolation.</p>
+<span id="more"></span>
+
+
+<h1 id="Document-Metadata"><a href="#Document-Metadata" class="headerlink" title="Document Metadata"></a>Document Metadata</h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Document type</td>
+<td>Technical Design Document + ADR (Architecture Decision Records)</td>
+</tr>
+<tr>
+<td>Project phase</td>
+<td>POC (3-month technical validation period)</td>
+</tr>
+<tr>
+<td>Core deliverables</td>
+<td>Architecture design + technical validation + core-logic code prototype + client prototype</td>
+</tr>
+<tr>
+<td>Target scale</td>
+<td>1000+ farmers / 3000–5000 ponds</td>
+</tr>
+<tr>
+<td>Document status</td>
+<td>Design draft; not a production-system performance report</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>Honesty statement</strong>: This document is a technical design document + ADR, covering the technical validation conclusions and scaled-architecture design for the project’s POC phase. Core deliverables are architecture design + technical validation + core-logic code prototype + client prototype. In this document, figures marked 📊 are estimates or taken from specification sheets; those marked ✔ have been verified by the code prototype; those marked ❌ are items still pending from the validation phase. Do not cite this document as a production-system performance report.</p>
+</blockquote>
+<hr>
+<h1 id="1-Background-Constraints"><a href="#1-Background-Constraints" class="headerlink" title="1. Background &amp; Constraints"></a>1. Background &amp; Constraints</h1><h2 id="1-1-Business-Scenario"><a href="#1-1-Business-Scenario" class="headerlink" title="1.1 Business Scenario"></a>1.1 Business Scenario</h2><p>The core risk in outdoor aquaculture (shrimp, fish) is the <strong>nighttime sudden drop in dissolved oxygen leading to floating-head / pond-turnover events</strong>. The window for dissolved oxygen (DO) to fall from the safe value (&gt;5 mg/L) to the danger value (&lt;2 mg/L) is only <strong>15–30 minutes</strong>. Once triggered, the farmer must complete operations such as starting or stopping aerators and adjusting water levels within an extremely short time.</p>
+<h2 id="1-2-Core-Contradictions"><a href="#1-2-Core-Contradictions" class="headerlink" title="1.2 Core Contradictions"></a>1.2 Core Contradictions</h2><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Manifestation</th>
+<th>Quantitative data</th>
+<th>Label</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Time window</td>
+<td>Very short time from DO drop to floating-head</td>
+<td>15–30 min</td>
+<td>📊</td>
+</tr>
+<tr>
+<td>Network environment</td>
+<td>Unstable 4G signal at ponds</td>
+<td>Packet loss 15%–30%</td>
+<td>📊</td>
+</tr>
+<tr>
+<td>Human constraint</td>
+<td>Farmers cannot stand guard 24/7</td>
+<td>Unattended at night &gt;80%</td>
+<td>📊</td>
+</tr>
+<tr>
+<td>Device density</td>
+<td>Sensors + controllers per pond</td>
+<td>3–8 devices/pond</td>
+<td>📊</td>
+</tr>
+<tr>
+<td>Target scale</td>
+<td>3000–5000 ponds, 1000+ farmers</td>
+<td>15,000–40,000 total devices</td>
+<td>📊</td>
+</tr>
+</tbody></table>
+<h2 id="1-3-Technical-Constraints"><a href="#1-3-Technical-Constraints" class="headerlink" title="1.3 Technical Constraints"></a>1.3 Technical Constraints</h2><table>
+<thead>
+<tr>
+<th>Constraint</th>
+<th>Value</th>
+<th>Impact</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>4G network latency (normal)</td>
+<td>50–200 ms</td>
+<td>MQTT QoS strategy selection</td>
+</tr>
+<tr>
+<td>4G packet loss (measured at pond)</td>
+<td>15%–30%</td>
+<td>Offline autonomy requires a local closed loop</td>
+</tr>
+<tr>
+<td>Edge-node power</td>
+<td>Solar + battery</td>
+<td>Power-sensitive; constrains MCU selection</td>
+</tr>
+<tr>
+<td>Edge-node unit-price budget</td>
+<td>&lt; ¥500/node (target)</td>
+<td>Industrial vs. consumer trade-off</td>
+</tr>
+<tr>
+<td>Sampling frequency per pond</td>
+<td>5 min/reading (normal), 30 s/reading (alert)</td>
+<td>Bandwidth and storage planning</td>
+</tr>
+</tbody></table>
+<hr>
+<h1 id="2-POC-Phase-Technical-Validation"><a href="#2-POC-Phase-Technical-Validation" class="headerlink" title="2. POC-Phase Technical Validation"></a>2. POC-Phase Technical Validation</h1><h2 id="2-1-Scope-of-Validation"><a href="#2-1-Scope-of-Validation" class="headerlink" title="2.1 Scope of Validation"></a>2.1 Scope of Validation</h2><p>The POC phase, based on a Raspberry Pi 4B + Arduino + public datasets (NOAA water-temperature data, public DO sensor data), completed the following technical validations and code-prototype verifications:</p>
+<table>
+<thead>
+<tr>
+<th>Validation item</th>
+<th>POC implementation</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Edge data acquisition</td>
+<td>Arduino + simulated sensors (serial forwarding)</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>MQTT communication</td>
+<td>Mosquitto broker (local) + EMQX Cloud (testing)</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Offline-autonomy logic</td>
+<td>Python state machine + local rules engine</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Video AI (fish floating-head recognition)</td>
+<td>YOLOv5s surface floating-head detection (trained on public dataset)</td>
+<td>✔ (82% accuracy, not field-validated)</td>
+</tr>
+<tr>
+<td>Client prototype</td>
+<td>React + WebSocket real-time data panel</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Industrial-grade hardware</td>
+<td>❌ Not purchased</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Field 4G network test</td>
+<td>❌ Not measured on-site at a pond</td>
+<td>❌</td>
+</tr>
+</tbody></table>
+<h2 id="2-2-Communication-Protocol-Validation"><a href="#2-2-Communication-Protocol-Validation" class="headerlink" title="2.2 Communication-Protocol Validation"></a>2.2 Communication-Protocol Validation</h2><table>
+<thead>
+<tr>
+<th>Protocol</th>
+<th>Advantages</th>
+<th>Disadvantages</th>
+<th>POC conclusion</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MQTT 5.0</td>
+<td>Message expiry, reason codes, shared subscriptions</td>
+<td>Some broker compatibility issues</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>CoAP</td>
+<td>Extremely lightweight, UDP-friendly</td>
+<td>Reliability must be built in-house</td>
+<td>📊 Fallback (ultra-low-bandwidth scenarios)</td>
+</tr>
+<tr>
+<td>HTTP/REST</td>
+<td>Universal, easy to debug</td>
+<td>Large header overhead, no push</td>
+<td>✔ Management-plane API only</td>
+</tr>
+</tbody></table>
+<p><strong>Conclusion</strong>: MQTT 5.0 is unified on the data plane; REST API on the management plane. MQTT’s QoS1 + persistent sessions solve the offline-resumption problem.</p>
+<h2 id="2-3-Video-AI-Validation"><a href="#2-3-Video-AI-Validation" class="headerlink" title="2.3 Video-AI Validation"></a>2.3 Video-AI Validation</h2><p>The POC phase used a public surface-image dataset to train a YOLOv5s floating-head detection model:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Model</td>
+<td>YOLOv5s</td>
+<td>7.2M params; FP32 model 14 MB</td>
+</tr>
+<tr>
+<td>Training data</td>
+<td>1,200 public surface images (labeled floating-head / normal)</td>
+<td>Not field-collected</td>
+</tr>
+<tr>
+<td>mAP@0.5</td>
+<td>82%</td>
+<td>Validation set</td>
+</tr>
+<tr>
+<td>Inference device</td>
+<td>Raspberry Pi 4B (4 GB)</td>
+<td>Inference ~800 ms/frame</td>
+</tr>
+<tr>
+<td>Frame rate</td>
+<td>1 fps (power-constrained)</td>
+<td>Continuous inference ~3 W</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>Honesty note</strong>: The 82% mAP was achieved on a public dataset and has not been validated under the complex lighting, algal blooms, and raindrop interference of a real pond surface. For production, an estimated 5,000+ field-collected images will be needed for retraining; accuracy is expected to dip first, then rise.</p>
+</blockquote>
+<h2 id="2-4-Bandwidth-Cost-Validation"><a href="#2-4-Bandwidth-Cost-Validation" class="headerlink" title="2.4 Bandwidth-Cost Validation"></a>2.4 Bandwidth-Cost Validation</h2><table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Data per day per pond</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Sensor data (5-min sampling)</td>
+<td>~2.8 KB/day</td>
+<td>12 bytes/reading × 288 readings</td>
+</tr>
+<tr>
+<td>Sensor data (30-s sampling)</td>
+<td>~34 KB/day</td>
+<td>During alert period</td>
+</tr>
+<tr>
+<td>Heartbeat packets</td>
+<td>1.4 KB/day</td>
+<td>Once every 5 min</td>
+</tr>
+<tr>
+<td>Alert events</td>
+<td>~0.5 KB/day</td>
+<td>Normally &lt;5 events/day</td>
+</tr>
+<tr>
+<td>Video thumbnails (1-fps keyframe upload)</td>
+<td>~5 MB/day</td>
+<td>Uploaded only on anomalies</td>
+</tr>
+<tr>
+<td><strong>Normal day total</strong></td>
+<td><strong>~5 MB/day/pond</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Alert day total</strong></td>
+<td><strong>~10 MB/day/pond</strong></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>1,000 customers × average 3.5 ponds = 3,500 ponds:</p>
+<ul>
+<li>Normal-day total traffic: 3,500 × 5 MB = <strong>17.5 GB/day</strong></li>
+<li>Monthly traffic (incl. 20% alert days): <strong>~600 GB/month</strong></li>
+<li>4G IoT-card cost (est. ¥0.01/MB): <strong>~¥6,000/month</strong> (full-cloud solution)</li>
+</ul>
+<hr>
+<h1 id="3-Core-Architecture-Decisions-ADR"><a href="#3-Core-Architecture-Decisions-ADR" class="headerlink" title="3. Core Architecture Decisions (ADR)"></a>3. Core Architecture Decisions (ADR)</h1><h2 id="ADR-001-Edge-Autonomy-vs-Cloud-Centralized-Control"><a href="#ADR-001-Edge-Autonomy-vs-Cloud-Centralized-Control" class="headerlink" title="ADR-001: Edge Autonomy vs. Cloud-Centralized Control"></a>ADR-001: Edge Autonomy vs. Cloud-Centralized Control</h2><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Option A: Edge autonomy</th>
+<th>Option B: Cloud-centralized</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Usable while offline</td>
+<td>✔ Local closed loop, no network dependency</td>
+<td>❌ Offline = loss of control</td>
+</tr>
+<tr>
+<td>Response latency</td>
+<td>&lt;100 ms (local compute)</td>
+<td>500 ms–2 s (incl. network round trip)</td>
+</tr>
+<tr>
+<td>Rule updates</td>
+<td>Delivered via OTA</td>
+<td>Take effect instantly</td>
+</tr>
+<tr>
+<td>Complexity</td>
+<td>Edge logic complex; dual-end consistency required</td>
+<td>Logic centralized, simple</td>
+</tr>
+<tr>
+<td>Troubleshooting</td>
+<td>Distributed logs; hard to locate</td>
+<td>Centralized logs; easy to diagnose</td>
+</tr>
+</tbody></table>
+<p><strong>Conclusion</strong>: Choose <strong>Option A (edge autonomy as primary + cloud-side policy delivery)</strong>. Rationale: under a 15–30-minute floating-head window, cloud round-trip latency is unacceptable; at 15%–30% packet loss, cloud control is unreliable. An edge node must independently complete the full local loop of threshold judgment → alert → linked control when offline.</p>
+<hr>
+<h2 id="ADR-002-MQTT-Broker-Selection"><a href="#ADR-002-MQTT-Broker-Selection" class="headerlink" title="ADR-002: MQTT Broker Selection"></a>ADR-002: MQTT Broker Selection</h2><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>EMQX</th>
+<th>Mosquitto</th>
+<th>HiveMQ</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Clustering</td>
+<td>✔ Native clustering</td>
+<td>❌ Primarily single-node</td>
+<td>✔ Enterprise clustering</td>
+</tr>
+<tr>
+<td>Connections per node</td>
+<td>1,000,000 (official benchmark)</td>
+<td>~10,000</td>
+<td>500,000</td>
+</tr>
+<tr>
+<td>Rules engine</td>
+<td>✔ Built-in SQL rules</td>
+<td>❌ Requires external component</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Authorization/authentication</td>
+<td>✔ Rich</td>
+<td>Basic</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Open-source license</td>
+<td>Apache 2.0</td>
+<td>EPL/EDL</td>
+<td>Commercial</td>
+</tr>
+<tr>
+<td>Community activity</td>
+<td>High</td>
+<td>High</td>
+<td>Medium</td>
+</tr>
+</tbody></table>
+<p><strong>Conclusion</strong>: Choose <strong>EMQX Open Source</strong>. Rationale: native clustering is a hard requirement for 1,000+ edge-node connections; the built-in rules engine reduces middleware development; Apache 2.0 carries no commercial risk. The POC phase uses Mosquitto for quick validation, then switches to EMQX for production.</p>
+<h2 id="ADR-003-Time-Series-Data-Store-Selection"><a href="#ADR-003-Time-Series-Data-Store-Selection" class="headerlink" title="ADR-003: Time-Series Data-Store Selection"></a>ADR-003: Time-Series Data-Store Selection</h2><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>InfluxDB</th>
+<th>TimescaleDB</th>
+<th>TDengine</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Write throughput</td>
+<td>High</td>
+<td>Medium-high</td>
+<td>Extremely high (officially claims 20× InfluxDB)</td>
+</tr>
+<tr>
+<td>Compression ratio</td>
+<td>~10:1</td>
+<td>~5:1</td>
+<td>~10:1</td>
+</tr>
+<tr>
+<td>Query language</td>
+<td>InfluxQL / Flux</td>
+<td>SQL</td>
+<td>SQL-like</td>
+</tr>
+<tr>
+<td>Clustering</td>
+<td>2.0+ open-source single node; clustering commercial</td>
+<td>Open source</td>
+<td>Open source (3.0+)</td>
+</tr>
+<tr>
+<td>Ecosystem maturity</td>
+<td>Extremely high</td>
+<td>High (PostgreSQL ecosystem)</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Hardware footprint</td>
+<td>Medium</td>
+<td>High (PG overhead)</td>
+<td>Low</td>
+</tr>
+</tbody></table>
+<p><strong>Conclusion</strong>: Choose <strong>TDengine Community Edition</strong>. Rationale: extreme write throughput suits high-frequency sensor data (3,500 ponds × multiple metrics); high compression ratio reduces storage cost; open-source clustering in 3.0+; SQL-like lowers the learning curve. If the team has deep PostgreSQL experience, TimescaleDB can be chosen to reduce migration cost.</p>
+<h2 id="ADR-004-Edge-Computing-Hardware-Platform"><a href="#ADR-004-Edge-Computing-Hardware-Platform" class="headerlink" title="ADR-004: Edge-Computing Hardware Platform"></a>ADR-004: Edge-Computing Hardware Platform</h2><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Raspberry Pi 4B</th>
+<th>NVIDIA Jetson Nano</th>
+<th>ESP32 + gateway</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Power</td>
+<td>3–5 W</td>
+<td>5–10 W</td>
+<td>&lt;1 W (ESP32) + 2 W (gateway)</td>
+</tr>
+<tr>
+<td>Video AI</td>
+<td>Feasible (YOLOv5s 1 fps)</td>
+<td>Feasible (10+ fps)</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Unit price</td>
+<td>~¥400</td>
+<td>~¥1,500</td>
+<td>~¥50 + ~¥200</td>
+</tr>
+<tr>
+<td>Industrial temp. range</td>
+<td>0–50 °C</td>
+<td>-25–80 °C (industrial version)</td>
+<td>-40–85 °C</td>
+</tr>
+<tr>
+<td>Storage reliability</td>
+<td>microSD (fragile)</td>
+<td>eMMC</td>
+<td>Flash</td>
+</tr>
+<tr>
+<td>Multi-sensor expansion</td>
+<td>8+ USB/GPIO</td>
+<td>Rich</td>
+<td>Limited</td>
+</tr>
+</tbody></table>
+<p><strong>Conclusion</strong>: Choose an <strong>ESP32 + edge-gateway layered architecture</strong>. Rationale: when a single pond does not require video AI, the ESP32 directly acquires sensor data + controls the aerator (&lt;1 W, solar-friendly); inference-capable gateways are deployed only at ponds that need video AI (est. 20%–30%). The layered design lowers overall BOM cost and avoids the waste of “equipping every pond with a Raspberry Pi.”</p>
+<h2 id="ADR-005-Offline-Autonomy-Strategy"><a href="#ADR-005-Offline-Autonomy-Strategy" class="headerlink" title="ADR-005: Offline-Autonomy Strategy"></a>ADR-005: Offline-Autonomy Strategy</h2><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Periodic reporting + local rules</th>
+<th>Pure event-driven</th>
+<th>Dual-channel redundancy</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Bandwidth usage</td>
+<td>Medium (periodic heartbeat + data)</td>
+<td>Extremely low</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Offline safety</td>
+<td>✔ Local rules closed loop</td>
+<td>⚠️ Rules are simple</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Implementation complexity</td>
+<td>Medium</td>
+<td>Low</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Power</td>
+<td>Medium</td>
+<td>Low</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Cloud-recovery awareness</td>
+<td>✔ Heartbeat timeout detection</td>
+<td>❌</td>
+<td>✔</td>
+</tr>
+</tbody></table>
+<p><strong>Conclusion</strong>: Choose <strong>periodic reporting + local rules + 4G/LoRa dual-channel redundancy (for critical ponds)</strong>. Normal mode: report every 5 min + local threshold monitoring; alert mode: switch to 30-s high-frequency reporting; when offline: full local autonomy (threshold judgment → audible/visual alarm → linked aerator); after the network recovers, backfill data. Critical ponds (high-density farming) add a LoRa backup channel to neighbor nodes.</p>
+<h2 id="ADR-006-Client-Real-Time-Communication"><a href="#ADR-006-Client-Real-Time-Communication" class="headerlink" title="ADR-006: Client Real-Time Communication"></a>ADR-006: Client Real-Time Communication</h2><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>WebSocket</th>
+<th>MQTT over WS</th>
+<th>Server-Sent Events</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Bidirectional</td>
+<td>✔</td>
+<td>✔</td>
+<td>❌ (one-way)</td>
+</tr>
+<tr>
+<td>Native browser support</td>
+<td>✔</td>
+<td>Requires a library</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Reconnection</td>
+<td>Must be built in-house</td>
+<td>✔ Protocol-level support</td>
+<td>✔ Automatic</td>
+</tr>
+<tr>
+<td>Message overhead</td>
+<td>Minimal</td>
+<td>Slightly larger (MQTT header)</td>
+<td>Small</td>
+</tr>
+<tr>
+<td>Multi-end adaptation</td>
+<td>✔</td>
+<td>✔</td>
+<td>✔</td>
+</tr>
+</tbody></table>
+<p><strong>Conclusion</strong>: Choose <strong>MQTT over WebSocket</strong>. Rationale: unified with the device-side protocol, reducing end-to-end complexity; the client reuses the MQTT topic-subscription model, with permission control consistent with the device side; EMQX natively supports WS access.</p>
+<hr>
+<h1 id="4-Scaling-Roadmap"><a href="#4-Scaling-Roadmap" class="headerlink" title="4. Scaling Roadmap"></a>4. Scaling Roadmap</h1><pre><code class="highlight mermaid">timeline
+    title System Evolution Roadmap
+    POC Phase (0-3 mo) : Dev-board validation : Core-logic prototype : Client prototype
+    MVP Phase (3-12 mo) : 50 households/150 ponds : Industrial hardware selection : Single-region deployment
+    Growth Phase (1-2 yr) : 300 households/1000 ponds : Multi-region cluster : Gradual OTA
+    Scale Phase (2-3 yr) : 1000 households/3500 ponds : Multi-cloud DR : Complete O&amp;M system
+    HyperScale (3 yr+) : 5000+ ponds : Edge-AI federated learning : Industry SaaS platform</code></pre>
+
+<h2 id="4-1-POC-→-MVP-0–12-Months"><a href="#4-1-POC-→-MVP-0–12-Months" class="headerlink" title="4.1 POC → MVP (0–12 Months)"></a>4.1 POC → MVP (0–12 Months)</h2><table>
+<thead>
+<tr>
+<th>Milestone</th>
+<th>Target</th>
+<th>Key actions</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>M1 (3–6 mo)</td>
+<td>Industrial hardware finalized</td>
+<td>Complete ESP32 gateway PCB design + sensor selection validation</td>
+</tr>
+<tr>
+<td>M2 (6–9 mo)</td>
+<td>50-household pilot</td>
+<td>Single-region deployment; field validation of 4G network and offline autonomy</td>
+</tr>
+<tr>
+<td>M3 (9–12 mo)</td>
+<td>200-household expansion</td>
+<td>Multi-tenant isolation goes live; initial O&amp;M system built</td>
+</tr>
+</tbody></table>
+<h2 id="4-2-MVP-→-1000-Customers-1–3-Years"><a href="#4-2-MVP-→-1000-Customers-1–3-Years" class="headerlink" title="4.2 MVP → 1000+ Customers (1–3 Years)"></a>4.2 MVP → 1000+ Customers (1–3 Years)</h2><table>
+<thead>
+<tr>
+<th>Milestone</th>
+<th>Target</th>
+<th>Key actions</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>M4 (12–18 mo)</td>
+<td>500 households</td>
+<td>EMQX cluster scaling; TDengine partitioning &amp; sharding</td>
+</tr>
+<tr>
+<td>M5 (18–24 mo)</td>
+<td>800 households</td>
+<td>Multi-cloud deployment; gradual OTA system</td>
+</tr>
+<tr>
+<td>M6 (24–36 mo)</td>
+<td>1000+ households</td>
+<td>Full-link monitoring; cost-optimization initiative</td>
+</tr>
+</tbody></table>
+<h2 id="4-3-1000-→-5000-Customers-3-Years"><a href="#4-3-1000-→-5000-Customers-3-Years" class="headerlink" title="4.3 1000+ → 5000+ Customers (3+ Years)"></a>4.3 1000+ → 5000+ Customers (3+ Years)</h2><ul>
+<li>Enhanced edge-node autonomy (local AI inferencepushed to the edge to the edge)</li>
+<li>Federated learning: collaborative model training across ponds without uploading raw data</li>
+<li>Industry SaaS-ification: opening APIs to ecosystem partners such as feed, insurance, and finance</li>
+</ul>
+<hr>
+<h1 id="5-Dedicated-Design-for-1000-Customers"><a href="#5-Dedicated-Design-for-1000-Customers" class="headerlink" title="5. Dedicated Design for 1000+ Customers"></a>5. Dedicated Design for 1000+ Customers</h1><h2 id="5-1-Multi-Tenant-Isolation"><a href="#5-1-Multi-Tenant-Isolation" class="headerlink" title="5.1 Multi-Tenant Isolation"></a>5.1 Multi-Tenant Isolation</h2><h3 id="Problem-Statement"><a href="#Problem-Statement" class="headerlink" title="Problem Statement"></a>Problem Statement</h3><p>The data of 1000+ farmers must be strictly isolated: farmer A cannot see farmer B’s pond data; when troubleshooting a device, O&amp;M personnel can only see devices within their scope of authorization; MQTT topic routing must be precise to the customer level.</p>
+<h3 id="Solution-Design"><a href="#Solution-Design" class="headerlink" title="Solution Design"></a>Solution Design</h3><p><strong>Three-layer isolation model:</strong></p>
+<pre><code class="highlight mermaid">flowchart TB
+    subgraph L3["Level 3 · Application-layer RBAC"]
+        A[Roles: farmer / admin / O&amp;M / read-only]
+    end
+    subgraph L2["Level 2 · MQTT topic-namespace isolation"]
+        B["tenant/{customerId}/pond/{pondId}/data"]
+        C["tenant/{customerId}/pond/{pondId}/command"]
+        D["tenant/{customerId}/alert/+"]
+    end
+    subgraph L1["Level 1 · Data-layer partitioning"]
+        E["TDengine super-table + customerId TAG"]
+        F["Independent sub-table per tenant + tag filtering"]
+    end
+    L3 --&gt; L2
+    L2 --&gt; L1</code></pre>
+
+<h3 id="Specific-Parameters"><a href="#Specific-Parameters" class="headerlink" title="Specific Parameters"></a>Specific Parameters</h3><table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>customerId format</td>
+<td><code>c_</code> + 8-char hash</td>
+<td>Globally unique, not reversibly derivable</td>
+</tr>
+<tr>
+<td>MQTT ACL granularity</td>
+<td>Topic-level + customer-level</td>
+<td>EMQX built-in ACL chain</td>
+</tr>
+<tr>
+<td>Database isolation</td>
+<td>Shared database + tenant TAG</td>
+<td>No separate database, reducing O&amp;M overhead</td>
+</tr>
+<tr>
+<td>Default token validity</td>
+<td>2 hours</td>
+<td>JWT + refresh mechanism</td>
+</tr>
+<tr>
+<td>Permission-change take-effect latency</td>
+<td>&lt;5 s</td>
+<td>Push ACL hot update</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="5-2-Message-Storm-Mitigation"><a href="#5-2-Message-Storm-Mitigation" class="headerlink" title="5.2 Message-Storm Mitigation"></a>5.2 Message-Storm Mitigation</h2><h3 id="Problem-Statement-1"><a href="#Problem-Statement-1" class="headerlink" title="Problem Statement"></a>Problem Statement</h3><p>Thunderstorm evenings are a high-incidence window for sudden DO drops / floating-head events. 3000+ ponds may trigger alerts in the same time window, creating a concurrent-message peak.</p>
+<p><strong>Quantitative estimate (3,000-pond concurrent-alert scenario):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Value</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Alert-window messages per pond</td>
+<td>~80</td>
+<td>P0/P1/P2 alerts + heartbeats + state changes</td>
+</tr>
+<tr>
+<td>Total message count</td>
+<td>~240,000</td>
+<td>3,000 × 80</td>
+</tr>
+<tr>
+<td>Duration</td>
+<td>15–30 min</td>
+<td>Floating-head response window</td>
+</tr>
+<tr>
+<td>Average message rate</td>
+<td>133–267 msg/s</td>
+<td>Uniform assumption</td>
+</tr>
+<tr>
+<td>Burst peak (first minute)</td>
+<td>~3,000 msg/s (entire cluster)</td>
+<td>First batch of 3,000 ponds’ P2 arrives simultaneously</td>
+</tr>
+<tr>
+<td>Per node (3-node cluster)</td>
+<td>~1,000 msg/s</td>
+<td>Sharded by connection hash</td>
+</tr>
+</tbody></table>
+<p><strong>Throughput conclusion:</strong> At message rates below 4,000 msg/s, neither the EMQX cluster nor TDengine writes are in the bottleneck zone. The real pressure points are:</p>
+<ol>
+<li><strong>External-notification channels</strong> (SMS / push) delivery latency — not system throughput</li>
+<li><strong>End-to-end latency</strong>: alert generated → farmer receives notification → response action must complete within the 15–30-minute window</li>
+<li><strong>Control-plane cascading</strong>: farmers’ panic-driven remote operations (repeatedly toggling aerators) amplify message volume</li>
+</ol>
+<h3 id="Design-Principles"><a href="#Design-Principles" class="headerlink" title="Design Principles"></a>Design Principles</h3><blockquote>
+<p><strong>The first rule of an alert system is “don’t lose,” not “don’t crash.”</strong></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>❌ Don’t</th>
+<th>✔ Do</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Circuit-break and drop alert messages</td>
+<td>Store everything; push notifications can be merged</td>
+</tr>
+<tr>
+<td>Sacrifice P2/P3 when the system is overloaded</td>
+<td>P0/P1 delivered first; P2/P3 merged and pushed</td>
+</tr>
+<tr>
+<td>Cloud as the sole path for alert execution</td>
+<td>Edge local autonomy is the life-saving channel</td>
+</tr>
+<tr>
+<td>Leave the control plane unlimited</td>
+<td>Rate-limit farmer operations to prevent panic amplification</td>
+</tr>
+</tbody></table>
+<h3 id="Solution-Design-Four-Layer-Defense"><a href="#Solution-Design-Four-Layer-Defense" class="headerlink" title="Solution Design: Four-Layer Defense"></a>Solution Design: Four-Layer Defense</h3><pre><code class="highlight mermaid">flowchart TB
+    subgraph L1["L1: Edge local autonomy (network-independent)"]
+        E1[DO &lt; 3mg/L for 2 min] --&gt; E2[Start aerator locally]
+        E1 --&gt; E3[Audible/visual alarm]
+        E1 --&gt; E4[Independent SMS/call channel]
+    end
+
+    subgraph L2["L2: Cloud message classification + merging"]
+        M1[Alert messages enqueue] --&gt; M2{Level determination}
+        M2 --&gt;|P0 fatal| M3[Priority queue · guaranteed · multi-channel]
+        M2 --&gt;|P1 severe| M4[Merge: 1 per pond per 5 min]
+        M2 --&gt;|P2 warning| M5[Merge: 1 per pond per 15 min]
+        M2 --&gt;|P3 info| M6[Async store · no real-time push]
+        M3 --&gt; M7[Write all to TDengine]
+        M4 --&gt; M7
+        M5 --&gt; M7
+        M6 --&gt; M7
+    end
+
+    subgraph L3["L3: External notification channels"]
+        N1[P0 SMS] --&gt; N2[SMS aggregation gateway]
+        N2 --&gt; N3[Vendor A: Aliyun]
+        N2 --&gt; N4[Vendor B: Tencent Cloud]
+        N2 --&gt; N5[Vendor C: Huawei Cloud]
+        N2 --&gt; N6[Carrier direct connect CMPP/SGIP]
+        N1 --&gt; N7[Voice call dedicated for P0]
+        M4 --&gt; N8[App push merging]
+        M5 --&gt; N8
+    end
+
+    subgraph L4["L4: Control-plane rate limiting (prevent panic amplification)"]
+        C1[Farmer App operation] --&gt; C2{Operation type}
+        C2 --&gt;|Aerator toggle| C3[Limit: 1 device/30s · max 3/min]
+        C2 --&gt;|Batch operation| C4[Limit: 1 per 5 min · requires confirmation]
+        C3 --&gt; C5[Command enqueues → edge]
+        C4 --&gt; C5
+    end
+
+    L1 --&gt;|Alert sync report| M1</code></pre>
+
+<h3 id="Detailed-Parameters-by-Layer"><a href="#Detailed-Parameters-by-Layer" class="headerlink" title="Detailed Parameters by Layer"></a>Detailed Parameters by Layer</h3><p><strong>L1: Edge local autonomy</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Trigger condition</td>
+<td>DO &lt; 3 mg/L for 2 min</td>
+<td>No cloud judgment required</td>
+</tr>
+<tr>
+<td>Actions</td>
+<td>Start aerator + audible/visual alarm</td>
+<td>Local relay / IO control</td>
+</tr>
+<tr>
+<td>Independent notification</td>
+<td>Built-in SIM SMS / call on device</td>
+<td>Does not pass through cloud aggregation gateway</td>
+</tr>
+<tr>
+<td>4G packet-loss tolerance</td>
+<td>Still self-rescues at 100% loss</td>
+<td>Edge rules pre-installed</td>
+</tr>
+</tbody></table>
+<p><strong>Core logic:</strong> No matter how large the cloud-side message storm, the fish in the pond have already been saved by the local rules. Whether the cloud notification is delayed by 30 s or 5 s only changes “whether the farmer knows,” not “whether the fish die.”</p>
+<p><strong>L2: Cloud message classification and merging</strong></p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Definition</th>
+<th>Push strategy</th>
+<th>Store</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>P0-Fatal</td>
+<td>DO &lt; 2 mg/L</td>
+<td><strong>Guaranteed</strong>: priority queue, unlimited retries, multi-channel (push + SMS + voice)</td>
+<td>✔ All</td>
+<td>Floating-head risk</td>
+</tr>
+<tr>
+<td>P1-Severe</td>
+<td>DO &lt; 3 mg/L sustained</td>
+<td>Merge: 1 per pond per 5 min; full record in background</td>
+<td>✔ All</td>
+<td>Intervention needed</td>
+</tr>
+<tr>
+<td>P2-Warning</td>
+<td>DO &lt; 4 mg/L</td>
+<td>Merge: 1 per pond per 15 min</td>
+<td>✔ All</td>
+<td>Trend warning</td>
+</tr>
+<tr>
+<td>P3-Info</td>
+<td>Normal fluctuation</td>
+<td>No real-time push; periodic digest</td>
+<td>✔ All</td>
+<td>Daily fluctuation</td>
+</tr>
+</tbody></table>
+<p><strong>Merging rules (no messages lost):</strong></p>
+<ul>
+<li>Merging affects only <strong>push frequency</strong>; all original alerts are <strong>fully written to TDengine</strong></li>
+<li>When the client opens the app, it pulls the complete timeline from history</li>
+<li>When a new alert arrives within the merge window, the existing push card is updated (count +1) instead of showing a new notification</li>
+</ul>
+<p><strong>L3: External notification channels</strong></p>
+<p><strong>SMS aggregation gateway design:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Number of vendors</td>
+<td>≥3</td>
+<td>Aliyun / Tencent Cloud / Huawei Cloud + carrier direct connect</td>
+</tr>
+<tr>
+<td>Per-channel capacity</td>
+<td>200–500 msg/s</td>
+<td>Actual capacity for notification-class SMS</td>
+</tr>
+<tr>
+<td>Aggregated multi-channel capacity</td>
+<td>2000+ msg/s</td>
+<td>Parallel distribution</td>
+</tr>
+<tr>
+<td>3,000 P0 delivery latency</td>
+<td>&lt;5 s (normal) / &lt;30 s (failover)</td>
+<td>End-to-end</td>
+</tr>
+<tr>
+<td>Routing strategy</td>
+<td>Allocated by number segment (China Mobile / Unicom / Telecom / Broadnet)</td>
+<td>Improves delivery rate</td>
+</tr>
+<tr>
+<td>Primary/backup switching</td>
+<td>3 consecutive failures or failure rate &gt;10%</td>
+<td>Auto-switch to backup channel</td>
+</tr>
+<tr>
+<td>Idempotency control</td>
+<td>No duplicate within 30 s for same (eventId, phone)</td>
+<td>Prevents resend storm</td>
+</tr>
+<tr>
+<td>P0 voice call</td>
+<td>Independent channel; auto-triggered 10 s after SMS failure</td>
+<td>Last resort</td>
+</tr>
+</tbody></table>
+<p><strong>App push merging:</strong></p>
+<ul>
+<li>For the same pond at the same alert level, the client shows only 1 notification per minute</li>
+<li>Notification content updates dynamically: <code>"Pond A DO remains low (3/5 alerts)"</code></li>
+<li>When vendor push channels are throttled, rely on the in-app WS long connection as a supplement</li>
+</ul>
+<p><strong>L4: Control-plane rate limiting</strong></p>
+<table>
+<thead>
+<tr>
+<th>Operation type</th>
+<th>Rate-limit rule</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Single-device control (aerator toggle)</td>
+<td>1 per 30 s, max 3/min</td>
+<td>Prevent repeated clicks causing command storms</td>
+</tr>
+<tr>
+<td>Batch operation (one-tap all-on)</td>
+<td>1 per 5 min, requires confirmation</td>
+<td>Prevent panic all-on operations</td>
+</tr>
+<tr>
+<td>Parameter change (alert threshold)</td>
+<td>1 per min</td>
+<td>Prevent accidental touches</td>
+</tr>
+<tr>
+<td>WS command dispatch</td>
+<td>10 cmd/s per connection</td>
+<td>Protect edge-device processing threads</td>
+</tr>
+</tbody></table>
+<p><strong>Why limit the control plane rather than the alert plane:</strong></p>
+<ul>
+<li>Alert messages = read-only notifications; losing them affects safety</li>
+<li>Control commands = write operations; one extra message means one extra device action</li>
+<li>A farmer frantically tapping “turn on aerator” 5 times on the app = the edge receives 5 commands = unnecessary state switches and ack messages</li>
+</ul>
+<h3 id="Comparison-with-the-“Circuit-Breaker”-Approach"><a href="#Comparison-with-the-“Circuit-Breaker”-Approach" class="headerlink" title="Comparison with the “Circuit Breaker” Approach"></a>Comparison with the “Circuit Breaker” Approach</h3><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Circuit-breaker approach (❌ deprecated)</th>
+<th>This approach (✔ adopted)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Alert messages</td>
+<td>Drops P2/P3 when overloaded</td>
+<td>Store everything; push merging</td>
+</tr>
+<tr>
+<td>System protection</td>
+<td>Sacrifice messages to protect the system</td>
+<td>Limit control plane + edge autonomy; don’t lose messages</td>
+</tr>
+<tr>
+<td>Farmer experience</td>
+<td>Misses warning trends, jumps straight to P0</td>
+<td>Receives the merged, complete alert timeline</td>
+</tr>
+<tr>
+<td>Applicable scenario</td>
+<td>Generic internet high concurrency</td>
+<td><strong>IoT scenarios where alert integrity is paramount</strong></td>
+</tr>
+<tr>
+<td>Extreme case</td>
+<td>Fish float to the surface unnoticed during the break</td>
+<td>Edge has already started the aerator; cloud delay only affects the notification</td>
+</tr>
+</tbody></table>
+<h3 id="State-Transitions"><a href="#State-Transitions" class="headerlink" title="State Transitions"></a>State Transitions</h3><pre><code class="highlight mermaid">stateDiagram-v2
+    [*] --&gt; Normal: DO &gt;= 4mg/L
+    Normal --&gt; P2Warning: DO &lt; 4mg/L
+    P2Warning --&gt; P1Severe: DO &lt; 3mg/L for 2 min
+    P1Severe --&gt; P0Fatal: DO &lt; 2mg/L
+    P0Fatal --&gt; Recovered: DO rebounds &gt; 4mg/L
+    P2Warning --&gt; Recovered: DO rebounds &gt; 4mg/L
+    P1Severe --&gt; Recovered: DO rebounds &gt; 4mg/L
+
+    note right of P0Fatal
+        Triggers L1 edge autonomy:
+        · Start local aerator
+        · Audible/visual alarm
+        · Independent SMS/call
+        Triggers L3 cloud notification:
+        · Priority-queue push
+        · SMS aggregation gateway
+        · Voice-call last resort
+    end note
+
+    note right of P2Warning
+        L2 merged push:
+        · 1 per pond per 15 min
+        · Full storage
+    end note</code></pre>
+
+<h3 id="Validation-Argumentation-Status"><a href="#Validation-Argumentation-Status" class="headerlink" title="Validation / Argumentation Status"></a>Validation / Argumentation Status</h3><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Alert-classification logic design</td>
+<td>📊 Argued</td>
+<td>Based on floating-head physiological thresholds</td>
+</tr>
+<tr>
+<td>Edge-autonomy rules (DO threshold + duration)</td>
+<td>📊 Argued</td>
+<td>Based on aquaculture literature</td>
+</tr>
+<tr>
+<td>Merged-push strategy</td>
+<td>📊 Argued</td>
+<td>Referencing alert-system best practices</td>
+</tr>
+<tr>
+<td>Multi-channel SMS aggregation gateway</td>
+<td>📊 Argued</td>
+<td>Based on cloud-vendor public specifications</td>
+</tr>
+<tr>
+<td>Control-plane rate-limit parameters</td>
+<td>📊 Argued</td>
+<td>Based on operation-frequency estimates</td>
+</tr>
+<tr>
+<td>Actual thunderstorm 3,000-pond concurrent test</td>
+<td>❌ Not done</td>
+<td>POC phase has no real hardware cluster</td>
+</tr>
+<tr>
+<td>SMS delivery-latency measurement</td>
+<td>❌ Not done</td>
+<td>Requires a real carrier environment for validation</td>
+</tr>
+</tbody></table>
+<h2 id="5-3-Connection-Management"><a href="#5-3-Connection-Management" class="headerlink" title="5.3 Connection Management"></a>5.3 Connection Management</h2><h3 id="Problem-Statement-2"><a href="#Problem-Statement-2" class="headerlink" title="Problem Statement"></a>Problem Statement</h3><p>1,000+ persistent edge-node MQTT connections + 2,000+ farmer-client WS connections + O&amp;M/admin-backend connections = 3,000+ long connections per cluster. During peak periods (thunderstorms), simultaneous online rate of clients jumps from 30% to 80%+.</p>
+<h3 id="Solution-Design-1"><a href="#Solution-Design-1" class="headerlink" title="Solution Design"></a>Solution Design</h3><p><strong>EMQX cluster + tiered connection pool:</strong></p>
+<pre><code class="highlight mermaid">graph LR
+    A[1000+ edge nodes] --&gt;|TCP:1883| B[EMQX Cluster]
+    C[2000+ clients] --&gt;|WS:8083| B
+    D[O&amp;M backend] --&gt;|WS:8083| B
+    B --&gt;|Rules engine| E[TDengine]
+    B --&gt;|Rules engine| F[Business-service cluster]
+    F --&gt; G[Redis connection-state cache]
+    F --&gt; H[Alert service]</code></pre>
+
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>EMQX cluster node count</td>
+<td>3 nodes to start</td>
+<td>Each node carries ~1,500 connections (conservative)</td>
+</tr>
+<tr>
+<td>Max connections per node</td>
+<td>100,000 (theoretical) / 5,000 (planned)</td>
+<td>5× headroom reserved</td>
+</tr>
+<tr>
+<td>Edge-node heartbeat timeout</td>
+<td>90 s</td>
+<td>3 × 30 s keepalive</td>
+</tr>
+<tr>
+<td>Client WS heartbeat</td>
+<td>30 s</td>
+<td>Browser compatibility</td>
+</tr>
+<tr>
+<td>Message retention after disconnect</td>
+<td>24 h</td>
+<td>MQTT persistent session</td>
+</tr>
+<tr>
+<td>2,000 clients online at peak</td>
+<td>1,600 (80%)</td>
+<td>Thunderstorm-weather peak</td>
+</tr>
+</tbody></table>
+<p><strong>Scaling strategy</strong>: when connections exceed 60% of single-cluster capacity, auto-scale (Kubernetes HPA based on EMQX exporter metrics).</p>
+<hr>
+<h2 id="5-4-Operations-Maintenance-System"><a href="#5-4-Operations-Maintenance-System" class="headerlink" title="5.4 Operations &amp; Maintenance System"></a>5.4 Operations &amp; Maintenance System</h2><h3 id="Problem-Statement-3"><a href="#Problem-Statement-3" class="headerlink" title="Problem Statement"></a>Problem Statement</h3><p>3,500+ edge nodes are distributed across different regions and network environments, making remote O&amp;M the only viable approach. OTA failure rates, offline devices, and sensor drift all need to be handled without anyone going on-site.</p>
+<h3 id="Solution-Design-2"><a href="#Solution-Design-2" class="headerlink" title="Solution Design"></a>Solution Design</h3><p><strong>Five-layer O&amp;M architecture:</strong></p>
+<pre><code class="highlight mermaid">flowchart TB
+    subgraph L1["L1 · Heartbeat monitoring"]
+        A1["MQTT Last Will\n$SYS topics\nOnline status/signal/voltage"]
+    end
+    subgraph L2["L2 · Device shadow"]
+        A2["Desired vs. actual state\nOffline command buffer\nJSON shadow document"]
+    end
+    subgraph L3["L3 · OTA canary"]
+        A3["Tiered firmware push\nSignature verification\nAuto rollback"]
+    end
+    subgraph L4["L4 · Remote diagnostics"]
+        A4["Log pull\nHot config update\nRemote reboot\nmTLS secure channel"]
+    end
+    subgraph L5["L5 · Fault localization"]
+        A5["Topology awareness\nDependency analysis\nAlert correlation\nGrafana + Jaeger"]
+    end
+    L1 --&gt; L2 --&gt; L3 --&gt; L4 --&gt; L5</code></pre>
+
+<p><strong>OTA canary parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Ratio</th>
+<th>Observation window</th>
+<th>Rollback condition</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Canary</td>
+<td>5 units</td>
+<td>24 h</td>
+<td>Offline rate &gt;5%</td>
+</tr>
+<tr>
+<td>5%</td>
+<td>~175 units</td>
+<td>12 h</td>
+<td>Offline rate &gt;3%</td>
+</tr>
+<tr>
+<td>25%</td>
+<td>~875 units</td>
+<td>12 h</td>
+<td>Offline rate &gt;2%</td>
+</tr>
+<tr>
+<td>50%</td>
+<td>~1,750 units</td>
+<td>12 h</td>
+<td>Offline rate &gt;1%</td>
+</tr>
+<tr>
+<td>100%</td>
+<td>Full rollout</td>
+<td>—</td>
+<td>Offline rate &gt;1%</td>
+</tr>
+</tbody></table>
+<p><strong>Heartbeat-monitoring thresholds:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Normal</th>
+<th>Warning</th>
+<th>Critical</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Heartbeat interval</td>
+<td>30 s</td>
+<td>No heartbeat for 90 s</td>
+<td>No heartbeat for 300 s</td>
+</tr>
+<tr>
+<td>4G signal strength</td>
+<td>&gt;-85 dBm</td>
+<td>-85 to -100 dBm</td>
+<td>&lt;-100 dBm</td>
+</tr>
+<tr>
+<td>Battery voltage</td>
+<td>&gt;12 V</td>
+<td>11–12 V</td>
+<td>&lt;11 V</td>
+</tr>
+<tr>
+<td>Sensors online</td>
+<td>100%</td>
+<td>1 offline</td>
+<td>2+ offline</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="5-5-Cost-Control"><a href="#5-5-Cost-Control" class="headerlink" title="5.5 Cost Control"></a>5.5 Cost Control</h2><h3 id="Problem-Statement-4"><a href="#Problem-Statement-4" class="headerlink" title="Problem Statement"></a>Problem Statement</h3><p>The largest hidden costs in an IoT project are <strong>communication fees + cloud-resource fees + O&amp;M labor</strong>. At a scale of 3,500 ponds, saving ¥1/node/month = ¥42,000/year.</p>
+<h3 id="Solution-Design-3"><a href="#Solution-Design-3" class="headerlink" title="Solution Design"></a>Solution Design</h3><p><strong>Three-tier edgetiers + bandwidth optimization:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Edge tierr</th>
+<th>Applicable scenario</th>
+<th>Configuration</th>
+<th>Target unit price</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>L1 Basic</td>
+<td>Small pond (&lt;5 mu)</td>
+<td>ESP32 + 2 sensors</td>
+<td>&lt;¥200</td>
+</tr>
+<tr>
+<td>L2 Standard</td>
+<td>Medium pond (5–15 mu)</td>
+<td>ESP32 + 4–6 sensors + aerator control</td>
+<td>¥200–400</td>
+</tr>
+<tr>
+<td>L3 AI</td>
+<td>Large pond (&gt;15 mu)</td>
+<td>Edge gateway + video AI + LoRa backup</td>
+<td>¥500–800</td>
+</tr>
+</tbody></table>
+<p><strong>Bandwidth-optimization strategies:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Strategy</th>
+<th>Savings ratio</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Binary encoding (CBOR instead of JSON)</td>
+<td>~60%</td>
+<td>12 bytes → 5 bytes/reading</td>
+</tr>
+<tr>
+<td>Delta reporting (report changes only)</td>
+<td>~40%</td>
+<td>Identical consecutive values not reported</td>
+</tr>
+<tr>
+<td>Local cache + batch upload</td>
+<td>~30%</td>
+<td>Cache while offline; compressed batch send after recovery</td>
+</tr>
+<tr>
+<td>Video uploads keyframe thumbnails only</td>
+<td>~95%</td>
+<td>Upload 5 thumbnail frames on anomaly</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>Note:</strong> The goal of bandwidth optimization is to reduce long-term operating costs, not to handle message storms. Under message storms, the system relies on the four-layer defense in section 5.2 (edge autonomy + push merging + multi-channel notifications + control-plane rate limiting), without sacrificing alert messages.</p>
+</blockquote>
+<p><strong>Cloud-resource estimate (1,000 households / 3,500 ponds):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Spec</th>
+<th>Quantity</th>
+<th>Monthly cost estimate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>EMQX cluster</td>
+<td>8C16G</td>
+<td>3 nodes</td>
+<td>~¥3,000</td>
+</tr>
+<tr>
+<td>TDengine</td>
+<td>16C32G + 2 TB SSD</td>
+<td>3 nodes</td>
+<td>~¥5,000</td>
+</tr>
+<tr>
+<td>Business services</td>
+<td>4C8G</td>
+<td>6 instances</td>
+<td>~¥4,000</td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>4C8G</td>
+<td>2 nodes</td>
+<td>~¥1,500</td>
+</tr>
+<tr>
+<td>Object storage</td>
+<td>500 GB</td>
+<td>—</td>
+<td>~¥500</td>
+</tr>
+<tr>
+<td>4G IoT cards</td>
+<td>10 MB/month/card</td>
+<td>3,500 cards</td>
+<td>~¥3,500</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td></td>
+<td></td>
+<td><strong>~¥17,500/month</strong></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>For comparison: if all control were cloud-based (reporting every 5 s), the 4G traffic cost would reach <strong>~¥60,000/month</strong> — the edge-autonomy + low-frequency-reporting approach saves <strong>70%+</strong> in communication costs.</p>
+</blockquote>
+<hr>
+<h1 id="6-Internal-Architecture-of-an-Edge-Node"><a href="#6-Internal-Architecture-of-an-Edge-Node" class="headerlink" title="6. Internal Architecture of an Edge Node"></a>6. Internal Architecture of an Edge Node</h1><pre><code class="highlight mermaid">graph TB
+    subgraph Edge Node
+        A[Sensor acquisition layer&lt;br/&gt;DO/pH/temperature/water level] --&gt; B[Data preprocessing layer&lt;br/&gt;filtering/calibration/delta detection]
+        B --&gt; C[Local rules engine&lt;br/&gt;threshold judgment/linked control]
+        B --&gt; D[Data cache layer&lt;br/&gt;SQLite/ring buffer]
+        C --&gt; E[Control output layer&lt;br/&gt;aerator/feeder/alarm]
+        C --&gt; F[Alert decision layer&lt;br/&gt;classification/rate-limit/merge]
+        D --&gt; G[MQTT comm. layer&lt;br/&gt;QoS1/persistent session/reconnect]
+        F --&gt; G
+        H[OTA management&lt;br/&gt;signature/gradual/rollback] --&gt; I[System monitoring&lt;br/&gt;heartbeat/resources/logs]
+        I --&gt; G
+    end
+    G --&gt;|4G| J[EMQX cloud cluster]</code></pre>
+
+<h2 id="6-1-Core-Module-Description"><a href="#6-1-Core-Module-Description" class="headerlink" title="6.1 Core Module Description"></a>6.1 Core Module Description</h2><table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Responsibility</th>
+<th>Technology selection (POC-validated)</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Sensor acquisition</td>
+<td>Polling + interrupt trigger</td>
+<td>Arduino Wire (I2C) + serial</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Data preprocessing</td>
+<td>Moving-average filter, outlier removal</td>
+<td>Python Pandas / C ring buffer</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Rules engine</td>
+<td>Threshold judgment + linkage logic</td>
+<td>Python state machine (transitions lib)</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Data cache</td>
+<td>Local storage during offline periods</td>
+<td>SQLite / Python list</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>MQTT communication</td>
+<td>Pub/sub + QoS management</td>
+<td>Paho MQTT / gMQTT</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>OTA management</td>
+<td>Firmware download + verify + switch</td>
+<td>❌ Not implemented</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>System monitoring</td>
+<td>Resource collection + heartbeat send</td>
+<td>psutil / systemd</td>
+<td>✔ (Python side)</td>
+</tr>
+</tbody></table>
+<h2 id="6-2-Offline-Autonomy-State-Machine"><a href="#6-2-Offline-Autonomy-State-Machine" class="headerlink" title="6.2 Offline-Autonomy State Machine"></a>6.2 Offline-Autonomy State Machine</h2><pre><code class="highlight mermaid">stateDiagram-v2
+    [*] --&gt; NormalMonitoring
+    NormalMonitoring --&gt; WarningMode: DO &lt; 4mg/L
+    WarningMode --&gt; NormalMonitoring: DO recovers &gt; 5mg/L
+    WarningMode --&gt; AlertMode: DO &lt; 3mg/L for 2 min
+    AlertMode --&gt; EmergencyMode: DO &lt; 2mg/L for 1 min
+    AlertMode --&gt; WarningMode: DO recovers 3-5mg/L
+    EmergencyMode --&gt; LinkedControl: execute immediately
+    LinkedControl --&gt; AlertMode: DO recovers &gt; 3mg/L
+    EmergencyMode --&gt; EmergencyMode: DO stays &lt; 2mg/L
+    NormalMonitoring --&gt; OfflineAutonomy: heartbeat timeout &gt; 90s
+    OfflineAutonomy --&gt; NormalMonitoring: network recovers
+    OfflineAutonomy --&gt; OfflineAutonomy: continue executing local rules</code></pre>
+
+<hr>
+<h1 id="7-Hardware-Selection-Comparison"><a href="#7-Hardware-Selection-Comparison" class="headerlink" title="7. Hardware-Selection Comparison"></a>7. Hardware-Selection Comparison</h1><pre><code class="highlight mermaid">flowchart LR
+    subgraph MainController["Main controller"]
+        A1["POC: Raspberry Pi 4B"] --- A2["Validated recommendation: industrial RPi CM4 carrier / ESP32-S3"]
+    end
+    subgraph DOSensor["Dissolved-oxygen sensor"]
+        B1["POC: Gravity analog DO probe (serial)"] --- B2["Validated recommendation: Yushan Y4000-DO / Hach sc200"]
+    end
+    subgraph CommModule["Communication module"]
+        C1["POC: 4G USB module (Huawei E3372)"] --- C2["Validated recommendation: Heltec Air724 / Quectel EC200A"]
+    end
+    subgraph PowerSupply["Power supply"]
+        D1["POC: 5V/3A switching PSU"] --- D2["Validated recommendation: solar panel + MPPT + 12V Li battery"]
+    end
+    subgraph Enclosure["Enclosure protection"]
+        E1["POC: none (bare dev board)"] --- E2["Validated recommendation: IP67 waterproof enclosure"]
+    end
+    subgraph Camera["Camera"]
+        F1["POC: USB camera (Logitech C270)"] --- F2["Validated recommendation: Hikvision industrial camera / RPi HQ Cam"]
+    end
+    subgraph AeratorController["Aerator controller"]
+        G1["POC: 5V relay module"] --- G2["Validated recommendation: industrial SSR + contactor"]
+    end
+    subgraph BackupComm["Backup communication channel"]
+        H1["POC: none"] --- H2["Validated recommendation: LoRa SX1262 module"]
+    end</code></pre>
+
+<blockquote>
+<p><strong>Label note</strong>: In the comparison table above, the left column lists the dev-board solution actually used in the POC phase (marked ✔); the right column lists industrial-grade selection rationale based on public specification sheets (marked 📊). All industrial-grade recommendations have not yet entered the field-validation stage.</p>
+</blockquote>
+<hr>
+<h1 id="8-Validation-Status-Review-Risk-List"><a href="#8-Validation-Status-Review-Risk-List" class="headerlink" title="8. Validation-Status Review &amp; Risk List"></a>8. Validation-Status Review &amp; Risk List</h1><h2 id="8-1-Validated-Items-Code-Prototype-Runnable"><a href="#8-1-Validated-Items-Code-Prototype-Runnable" class="headerlink" title="8.1 Validated Items (Code Prototype Runnable)"></a>8.1 Validated Items (Code Prototype Runnable)</h2><table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Validation method</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Architecture design</td>
+<td>Complete technical architecture + 6 ADR decisions</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>MQTT communication prototype</td>
+<td>Local Mosquitto + Python pub/sub</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Offline-autonomy logic</td>
+<td>Python state machine, simulating offline/recovery</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Video-AI prototype</td>
+<td>YOLOv5s floating-head detection, public dataset</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Client prototype</td>
+<td>React + WebSocket data panel</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>Sensor data acquisition</td>
+<td>Arduino + simulated DO-sensor serial acquisition</td>
+<td>✔</td>
+</tr>
+</tbody></table>
+<h2 id="8-2-Pending-Items-Corresponding-Risks"><a href="#8-2-Pending-Items-Corresponding-Risks" class="headerlink" title="8.2 Pending Items &amp; Corresponding Risks"></a>8.2 Pending Items &amp; Corresponding Risks</h2><table>
+<thead>
+<tr>
+<th>Pending item</th>
+<th>Primary risk</th>
+<th>Risk level</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Industrial-hardware procurement and field testing</td>
+<td>Power, operating temp, and waterproofing lack real measurements</td>
+<td>🔴 High</td>
+</tr>
+<tr>
+<td>Field 4G network test at ponds</td>
+<td>15%–30% packet loss is an estimate; the real value may be higher</td>
+<td>🔴 High</td>
+</tr>
+<tr>
+<td>Large-scale MQTT cluster stress test</td>
+<td>No baseline yet for stability at 1,000+ long connections</td>
+<td>🟠 Medium</td>
+</tr>
+<tr>
+<td>OTA system implementation</td>
+<td>Remote O&amp;M chain not yet established</td>
+<td>🟠 Medium</td>
+</tr>
+<tr>
+<td>Multi-tenant permission system</td>
+<td>Data-isolation logic not yetp ut into practice validated</td>
+<td>🟠 Medium</td>
+</tr>
+<tr>
+<td>Field video collection and model training</td>
+<td>82% mAP cannot be used directly as a production metric</td>
+<td>🟠 Medium</td>
+</tr>
+<tr>
+<td>Solar-power-supply validation</td>
+<td>Edge-node endurance unknown</td>
+<td>🟠 Medium</td>
+</tr>
+<tr>
+<td>Aerator-linkage field test</td>
+<td>Electrical safety of control logic not validated</td>
+<td>🔴 High</td>
+</tr>
+</tbody></table>
+<h2 id="8-3-Key-Architectural-Insights"><a href="#8-3-Key-Architectural-Insights" class="headerlink" title="8.3 Key Architectural Insights"></a>8.3 Key Architectural Insights</h2><ol>
+<li><strong>In agricultural IoT, the primary risk is not the algorithm but the infrastructure</strong>: 4G signal, power, waterproofing, temperature — these “unglamorous” constraintsdetermine whether the system can survive</li>
+<li><strong>The validation order should be reversed</strong>: first go to the pond to measure 4G signal, solar endurance, and sensor drift in dirty water; then polish the client UI</li>
+<li><strong>Edge autonomy is not a feature — it is a survival capability</strong>: whether the system can close the loop independently after a pond goes offline takes priority over any interaction experience</li>
+<li><strong>The reusable value of architectural decisions outweighs point solutions</strong>: once selection comparisons, threshold derivations, and scaling parameters are documented, they can serve directly as a baseline for implementation</li>
+</ol>
+<hr>
+<h1 id="9-Appendix"><a href="#9-Appendix" class="headerlink" title="9. Appendix"></a>9. Appendix</h1><h2 id="9-1-Message-Volume-Quick-Calculation"><a href="#9-1-Message-Volume-Quick-Calculation" class="headerlink" title="9.1 Message-Volume Quick Calculation"></a>9.1 Message-Volume Quick Calculation</h2><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Per-message size</th>
+<th>Frequency</th>
+<th>Per pond/day</th>
+<th>3,500 ponds/day</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Sensor data (normal)</td>
+<td>5 B (CBOR)</td>
+<td>Every 5 min</td>
+<td>1.44 KB</td>
+<td>5 MB</td>
+</tr>
+<tr>
+<td>Sensor data (alert)</td>
+<td>5 B</td>
+<td>Every 30 s</td>
+<td>14.4 KB</td>
+<td>50 MB</td>
+</tr>
+<tr>
+<td>Alert events</td>
+<td>50 B</td>
+<td>Avg. 3/day</td>
+<td>0.15 KB</td>
+<td>0.5 MB</td>
+</tr>
+<tr>
+<td>Heartbeat</td>
+<td>20 B</td>
+<td>Every 30 s</td>
+<td>57.6 KB</td>
+<td>200 MB</td>
+</tr>
+<tr>
+<td>OTA ack</td>
+<td>100 B</td>
+<td>Every 6 h</td>
+<td>0.4 KB</td>
+<td>1.4 MB</td>
+</tr>
+<tr>
+<td><strong>Total (normal day)</strong></td>
+<td></td>
+<td></td>
+<td><strong>~60 KB</strong></td>
+<td><strong>~210 MB</strong></td>
+</tr>
+<tr>
+<td><strong>Total (thunderstorm peak day)</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td><strong>~800 MB</strong></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>Note: with CBOR encoding + delta reporting, actual traffic is roughly <strong>65%</strong> lower than the original JSON solution.</p>
+</blockquote>
+<h2 id="9-2-Scaling-Quick-Reference-Table"><a href="#9-2-Scaling-Quick-Reference-Table" class="headerlink" title="9.2 Scaling Quick-Reference Table"></a>9.2 Scaling Quick-Reference Table</h2><table>
+<thead>
+<tr>
+<th>Scale</th>
+<th>Edge nodes</th>
+<th>Client connections</th>
+<th>EMQX nodes</th>
+<th>TDengine nodes</th>
+<th>Storage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>50 households / 150 ponds</td>
+<td>150</td>
+<td>100</td>
+<td>1</td>
+<td>1</td>
+<td>200 GB</td>
+</tr>
+<tr>
+<td>200 households / 700 ponds</td>
+<td>700</td>
+<td>400</td>
+<td>1</td>
+<td>1</td>
+<td>1 TB</td>
+</tr>
+<tr>
+<td>500 households / 1,750 ponds</td>
+<td>1,750</td>
+<td>1,000</td>
+<td>3</td>
+<td>3</td>
+<td>2.5 TB</td>
+</tr>
+<tr>
+<td>1,000 households / 3,500 ponds</td>
+<td>3,500</td>
+<td>2,000</td>
+<td>3</td>
+<td>3</td>
+<td>5 TB</td>
+</tr>
+<tr>
+<td>2,000 households / 5,000+ ponds</td>
+<td>5,000+</td>
+<td>4,000</td>
+<td>5</td>
+<td>5</td>
+<td>10 TB+</td>
+</tr>
+</tbody></table>
+<h2 id="9-3-Latency-Budget-Floating-Head-Alert-Chain"><a href="#9-3-Latency-Budget-Floating-Head-Alert-Chain" class="headerlink" title="9.3 Latency Budget (Floating-Head Alert Chain)"></a>9.3 Latency Budget (Floating-Head Alert Chain)</h2><table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Normal</th>
+<th>Worst case</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Sensor sampling period</td>
+<td>5 s</td>
+<td>30 s (polling-schedule latency)</td>
+</tr>
+<tr>
+<td>Edge rule evaluation</td>
+<td>&lt;10 ms</td>
+<td>&lt;10 ms</td>
+</tr>
+<tr>
+<td>MQTT publish to broker</td>
+<td>50 ms</td>
+<td>500 ms (4G jitter)</td>
+</tr>
+<tr>
+<td>Broker rules-engine processing</td>
+<td>&lt;5 ms</td>
+<td>&lt;20 ms</td>
+</tr>
+<tr>
+<td>Alert-service processing</td>
+<td>&lt;50 ms</td>
+<td>&lt;200 ms</td>
+</tr>
+<tr>
+<td>WebSocket push to client</td>
+<td>&lt;50 ms</td>
+<td>&lt;200 ms</td>
+</tr>
+<tr>
+<td>Client rendering</td>
+<td>&lt;100 ms</td>
+<td>&lt;300 ms</td>
+</tr>
+<tr>
+<td><strong>End-to-end total latency</strong></td>
+<td><strong>~265 ms</strong></td>
+<td><strong>~1.23 s</strong></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>Even in the worst case, the 1.23 s alert latency is far smaller than the 15–30-minute floating-head window; the local response of edge autonomy (&lt;100 ms) provides the fa</p>
+</blockquote>
+<!-- hexo injector body_end start -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    mermaid.initialize({"startOnLoad":true});
+  });
+</script>
+<!-- hexo injector body_end end --></body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/MQTT/">#MQTT</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/EMQX/">#EMQX</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Edge-Computing/">#Edge Computing</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/TDengine/">#TDengine</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Aquaculture/">#Aquaculture</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Time-Series-Database/">#Time-Series Database</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop is-hidden-mobile article-nav-prev">
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop  article-nav-next">
+            
+            <a href="/posts/2024/12/01/Bank_System_Migration_to_Domestic/">Bank System Migration to Domestic Tech Stack: From CentOS Retirement to Internal Cloud Go-Live</a>
+            
+        </span>
+    </div>
+    
+</article>
+
+
+
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-hidden-mobile"></div>
+
+            
+            
+        </div>
+    </div>
+</footer>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
+    <style>
+        .hljs {
+            position: relative;
+        }
+
+        .hljs .clipboard-btn {
+            float: right;
+            color: #9a9a9a;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .hljs .clipboard-btn:hover {
+          color: #8a8a8a;
+        }
+
+        .hljs > .clipboard-btn {
+            display: none;
+            position: absolute;
+            right: 4px;
+            top: 4px;
+        }
+
+        .hljs:hover > .clipboard-btn {
+            display: inline;
+        }
+
+        .hljs > figcaption > .clipboard-btn {
+            margin-right: 4px;
+        }
+    </style>
+    <script>
+      $(document).ready(function () {
+        $('figure.hljs').each(function(i, figure) {
+          var codeId = 'code-' + i;
+          var code = figure.querySelector('.code');
+          var copyButton = $('<button>Copy <i class="far fa-clipboard"></i></button>');
+          code.id = codeId;
+          copyButton.addClass('clipboard-btn');
+          copyButton.attr('data-clipboard-target-id', codeId);
+
+          var figcaption = figure.querySelector('figcaption');
+
+          if (figcaption) {
+            figcaption.append(copyButton[0]);
+          } else {
+            figure.prepend(copyButton[0]);
+          }
+        })
+
+        var clipboard = new ClipboardJS('.clipboard-btn', {
+          target: function(trigger) {
+            return document.getElementById(trigger.getAttribute('data-clipboard-target-id'));
+          }
+        });
+        clipboard.on('success', function(e) {
+          e.clearSelection();
+        })
+      })
+    </script>
+
+    
+    
+
+    
+
+
+
+<script src="/js/script.js"></script>
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+            BASE_URL: '/',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>
