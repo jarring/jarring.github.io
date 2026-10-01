@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+<head>
+    <meta charset="utf-8">
+<title>The Evolution of Concurrency Abstractions: From Paper Tape, Processes &amp; Threads to Modern Coroutines - Blogger</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.css">
+
+
+<meta name="description" content="Hexo theme - Blogger">
+
+
+
+
+
+    <meta name="description" content="In the early days of computing, an operator would load a paper tape and the machine would run straight through from start to finish—unable to play music, print, or respond to the keyboard.Today, in th">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The Evolution of Concurrency Abstractions: From Paper Tape, Processes &amp; Threads to Modern Coroutines">
+<meta property="og:url" content="http://localhost:4000/posts/2024/07/01/History_of_Concurrency_Abstractions/index.html">
+<meta property="og:site_name" content="Blogger">
+<meta property="og:description" content="In the early days of computing, an operator would load a paper tape and the machine would run straight through from start to finish—unable to play music, print, or respond to the keyboard.Today, in th">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-07-01T13:25:01.000Z">
+<meta property="article:modified_time" content="2026-10-01T13:11:24.454Z">
+<meta property="article:author" content="Blogger">
+<meta property="article:tag" content="Async&#x2F;Await">
+<meta property="article:tag" content="C++ Programming">
+<meta property="article:tag" content="C++20">
+<meta property="article:tag" content="Concurrency">
+<meta property="article:tag" content="Coroutine">
+<meta property="article:tag" content="Fiber">
+<meta property="article:tag" content="Goroutine">
+<meta property="article:tag" content="Operating Systems">
+<meta property="article:tag" content="Process">
+<meta property="article:tag" content="Scheduler">
+<meta property="article:tag" content="Systems Design">
+<meta property="article:tag" content="Thread">
+<meta property="article:tag" content="Thread Pool">
+<meta name="twitter:card" content="summary">
+
+
+
+
+
+<link rel="icon" href="/favicon.png">
+
+
+<!-- <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ovo|Source+Code+Pro"> -->
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/css/lightgallery.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/css/justifiedGallery.min.css">
+
+
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+
+
+<meta name="generator" content="Hexo 8.1.2"></head>
+<body>
+    
+<nav class="navbar is-transparent is-fixed-top navbar-main" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item navbar-logo" href="/">
+                
+                    
+                    🐝
+                    
+                
+            </a>
+            <div class="navbar-burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu navbar-start">
+            
+            <a class="navbar-item "
+               href="/archives">Archives</a>
+            
+            <a class="navbar-item "
+               href="/categories">Categories</a>
+            
+            <a class="navbar-item "
+               href="/tags">Tags</a>
+            
+            <a class="navbar-item "
+               href="/about">About</a>
+            
+        </div>
+        
+        <div class="navbar-menu navbar-end">
+            
+            <a class="navbar-item search" title="Search" href="javascript:;">
+                <i class="fas fa-search"></i>
+            </a>
+            
+            
+            <div class="navbar-item is-hoverable has-dropdown is-hidden-mobile is-hidden-tablet-only toc">
+                <a class="navbar-item" title="Table of Contents">
+                    <i class="fa fa-list"></i>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    
+                    
+                    
+                    
+                    <a class="navbar-item" href="#1-Concurrency-Abstraction-Timeline">1&nbsp;&nbsp;<b>1. Concurrency Abstraction Timeline</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#2-Process-The-Unit-of-Resource-Allocation">2&nbsp;&nbsp;<b>2. Process: The Unit of Resource Allocation</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#2-1-Essence">2.1&nbsp;&nbsp;2.1 Essence</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#2-2-Core-Characteristics">2.2&nbsp;&nbsp;2.2 Core Characteristics</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#2-3-Typical-Problems">2.3&nbsp;&nbsp;2.3 Typical Problems</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#3-Thread-The-Execution-Unit-Scheduled-by-the-Kernel">3&nbsp;&nbsp;<b>3. Thread: The Execution Unit Scheduled by the Kernel</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#3-1-Essence">3.1&nbsp;&nbsp;3.1 Essence</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#3-2-Kernel-Threads-vs-User-Threads">3.2&nbsp;&nbsp;3.2 Kernel Threads vs. User Threads</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#3-3-Core-Characteristics-and-Problems">3.3&nbsp;&nbsp;3.3 Core Characteristics and Problems</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#4-Fiber-A-User-Space-“Lightweight-Thread”">4&nbsp;&nbsp;<b>4. Fiber: A User-Space “Lightweight Thread”</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#4-1-Essence">4.1&nbsp;&nbsp;4.1 Essence</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#4-2-Core-Characteristics">4.2&nbsp;&nbsp;4.2 Core Characteristics</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#4-3-Typical-Implementations-and-Fatal-Flaw">4.3&nbsp;&nbsp;4.3 Typical Implementations and Fatal Flaw</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#5-Coroutine-Language-Level-Cooperative-Multitasking">5&nbsp;&nbsp;<b>5. Coroutine: Language-Level Cooperative Multitasking</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#5-1-Essence">5.1&nbsp;&nbsp;5.1 Essence</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#5-2-Coroutine-Classifications">5.2&nbsp;&nbsp;5.2 Coroutine Classifications</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#5-3-Comprehensive-Four-Way-Comparison">5.3&nbsp;&nbsp;5.3 Comprehensive Four-Way Comparison</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#5-4-Language-Implementation-Comparison">5.4&nbsp;&nbsp;5.4 Language Implementation Comparison</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#6-An-In-Depth-Look-at-C-20-Coroutines-Features-but-No-Runtime">6&nbsp;&nbsp;<b>6. An In-Depth Look at C++20 Coroutines: Features, but No Runtime</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-1-What-the-Standard-Provides">6.1&nbsp;&nbsp;6.1 What the Standard Provides</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-2-Status-by-Version">6.2&nbsp;&nbsp;6.2 Status by Version</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-3-Why-Coroutines-Must-Run-on-a-Thread">6.3&nbsp;&nbsp;6.3 Why Coroutines Must Run on a Thread</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#6-4-The-Timing-of-Coroutine-Suspension-Resumption">6.4&nbsp;&nbsp;6.4 The Timing of Coroutine Suspension / Resumption</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#7-Engineering-Practice-C-20-Coroutines-Thread-Pool">7&nbsp;&nbsp;<b>7. Engineering Practice: C++20 Coroutines + Thread Pool</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#7-1-When-Do-You-Need-a-Thread-Pool">7.1&nbsp;&nbsp;7.1 When Do You Need a Thread Pool?</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#7-2-Minimal-Implementation">7.2&nbsp;&nbsp;7.2 Minimal Implementation</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#7-3-Production-Grade-Solutions">7.3&nbsp;&nbsp;7.3 Production-Grade Solutions</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#8-Differences-in-Design-Philosophy">8&nbsp;&nbsp;<b>8. Differences in Design Philosophy</b></a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#8-1-Scheduling-Philosophy">8.1&nbsp;&nbsp;8.1 Scheduling Philosophy</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#8-2-Concurrency-vs-Parallelism">8.2&nbsp;&nbsp;8.2 Concurrency vs. Parallelism</a>
+                    
+                    
+                    
+                    <a class="navbar-item" href="#8-3-One-Liner-to-Distinguish-the-Three">8.3&nbsp;&nbsp;8.3 One-Liner to Distinguish the Three</a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#9-Selection-Guide">9&nbsp;&nbsp;<b>9. Selection Guide</b></a>
+                    
+                    
+                    <hr class="navbar-divider">
+                    
+                    
+                    <a class="navbar-item" href="#10-Summary">10&nbsp;&nbsp;<b>10. Summary</b></a>
+                    
+                </div>
+            </div>
+            
+            
+        </div>
+    </div>
+</nav>
+
+    <section class="section">
+    <div class="container">
+    <article class="article content gallery" itemscope itemprop="blogPost">
+    <h1 class="article-title is-size-3 is-size-4-mobile" itemprop="name">
+        
+            The Evolution of Concurrency Abstractions: From Paper Tape, Processes &amp; Threads to Modern Coroutines
+        
+    </h1>
+    <div class="article-meta columns is-variable is-1 is-multiline is-mobile is-size-7-mobile">
+        <span class="column is-narrow">
+            
+                <time datetime="2024-07-01T13:25:01.000Z" itemprop="datePublished">Jul 1 2024</time>
+            
+        </span>
+        
+        <span class="column is-narrow article-category">
+            <i class="far fa-folder"></i>
+            <a class="article-category-link" href="/categories/Programming/">Programming</a>
+        </span>
+        
+        
+        <span class="column is-narrow">
+            
+            
+            15 minutes read (About 2185 words)
+        </span>
+        
+    </div>
+    <div class="article-entry is-size-6-mobile" itemprop="articleBody">
+    
+        <html><head></head><body><p>In the early days of computing, an operator would load a paper tape and the machine would run straight through from start to finish—unable to play music, print, or respond to the keyboard.<br>Today, in the era of high-performance servers and cloud-native computing, humanity’s pursuit of performance has reached near-extremes.</p>
+<p>This article traces the evolution of concurrency abstractions from the 1950s to the present, focusing on the essential differences among <strong>processes, threads, fibers, and coroutines</strong>, as well as the design philosophy behind C++20 coroutines: “features, but no runtime.”</p>
+<span id="more"></span>
+
+<h2 id="1-Concurrency-Abstraction-Timeline"><a href="#1-Concurrency-Abstraction-Timeline" class="headerlink" title="1. Concurrency Abstraction Timeline"></a>1. Concurrency Abstraction Timeline</h2><table>
+<thead>
+<tr>
+<th>Concept</th>
+<th>Earliest Idea / Term</th>
+<th>Emergence as a System Abstraction</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Program</td>
+<td>1940s</td>
+<td>Always present</td>
+<td>Static code + data; not an execution state</td>
+</tr>
+<tr>
+<td>Job</td>
+<td>1950s batch processing</td>
+<td>IBM 7090 / OS/360 era</td>
+<td>“A batch of work to run”; not a modern process</td>
+</tr>
+<tr>
+<td>Task</td>
+<td>1960s</td>
+<td>Used inconsistently across systems</td>
+<td>Sometimes ≈ process, sometimes ≈ thread</td>
+</tr>
+<tr>
+<td>Coroutine</td>
+<td>Coined by Conway in 1958; paper in 1963</td>
+<td>Simula 67, Modula-2, Lua, Python, Go</td>
+<td>User-space, cooperative control flow</td>
+</tr>
+<tr>
+<td>Process</td>
+<td>Mid-1960s</td>
+<td>Formally proposed in Multics (1965–69); solidified in UNIX in 1969</td>
+<td>Born from multiprogramming / time-sharing</td>
+</tr>
+<tr>
+<td>Thread</td>
+<td>1960s–70s concurrency research</td>
+<td>Research systems in the 1980s; mainstream in the 1990s (Solaris, Win NT 3.1, POSIX pthreads 1995)</td>
+<td>Concurrent execution flow within a process</td>
+</tr>
+<tr>
+<td>User-level thread / green thread</td>
+<td>1970s–80s</td>
+<td>Java 1.1 green threads, Scheduler Activations 1991</td>
+<td>“Threads” invisible to the kernel</td>
+</tr>
+<tr>
+<td>Fiber</td>
+<td>Idea rooted in coroutines / user-level threads</td>
+<td>Officially named Fiber in Windows NT 3.51 SP (1996)</td>
+<td>Cooperative context within a thread</td>
+</tr>
+<tr>
+<td>Modern async/await coroutine</td>
+<td>2000s–2010s</td>
+<td>C# 2012, Python 3.5, JS ES2017, Rust, C++20, Java Virtual Threads 2023+</td>
+<td>The “triumphant return” of the coroutine idea</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="2-Process-The-Unit-of-Resource-Allocation"><a href="#2-Process-The-Unit-of-Resource-Allocation" class="headerlink" title="2. Process: The Unit of Resource Allocation"></a>2. Process: The Unit of Resource Allocation</h2><h3 id="2-1-Essence"><a href="#2-1-Essence" class="headerlink" title="2.1 Essence"></a>2.1 Essence</h3><p>A process is an instance of a program in execution on a certain data set, and is the basic unit by which the OS performs <strong>resource allocation and scheduling</strong>. It is not a bare program, but rather a snapshot of all resources needed to run:</p>
+<ul>
+<li><strong>Program code</strong> (Text segment)</li>
+<li><strong>Data segment</strong> (global / static variables)</li>
+<li><strong>Heap</strong> (dynamically allocated memory)</li>
+<li><strong>Stack</strong> (function calls, local variables)</li>
+<li><strong>Process Control Block (PCB)</strong> — the core data structure the OS uses to manage processes; without a PCB, the kernel “doesn’t recognize” the process</li>
+</ul>
+<p>The PCB stores the process’s identity and execution context:</p>
+<ul>
+<li>PID</li>
+<li>Process state (running, ready, blocked)</li>
+<li>Program counter (address of the next instruction)</li>
+<li>CPU register values</li>
+<li>Memory management information</li>
+<li>List of open files</li>
+<li>Scheduling information</li>
+</ul>
+<h3 id="2-2-Core-Characteristics"><a href="#2-2-Core-Characteristics" class="headerlink" title="2.2 Core Characteristics"></a>2.2 Core Characteristics</h3><p>✔ <strong>Resource container</strong>: A process has its own independent virtual address space, file handles, signal handlers, etc. Resource isolation is thorough—when one process crashes, it generally does not affect other processes on the same machine.<br>✔ <strong>Scheduling unit</strong>: In traditional time-sharing OSes, the process is the basic unit of CPU allocation.<br>✔ <strong>Relatively high overhead</strong>: Creation, destruction, and switching all require kernel intervention, involving memory mapping and PCB operations, at millisecond-level cost.</p>
+<h3 id="2-3-Typical-Problems"><a href="#2-3-Typical-Problems" class="headerlink" title="2.3 Typical Problems"></a>2.3 Typical Problems</h3><p>✘ <strong>High switching cost</strong>: Context switching requires saving/restoring the entire address space, with TLB flushes and cache invalidation; frequent switching wastes a lot of CPU.<br>✘ <strong>Complex communication</strong>: Inter-process communication (IPC) must rely on pipes, message queues, shared memory, etc.—clumsier than thread-to-thread communication.<br>✘ <strong>Limited quantity</strong>: A single machine hits a bottleneck at a few thousand processes, and cannot easily support the hundreds of thousands of concurrent entities that threads and coroutines can.</p>
+<hr>
+<h2 id="3-Thread-The-Execution-Unit-Scheduled-by-the-Kernel"><a href="#3-Thread-The-Execution-Unit-Scheduled-by-the-Kernel" class="headerlink" title="3. Thread: The Execution Unit Scheduled by the Kernel"></a>3. Thread: The Execution Unit Scheduled by the Kernel</h2><h3 id="3-1-Essence"><a href="#3-1-Essence" class="headerlink" title="3.1 Essence"></a>3.1 Essence</h3><p>A thread is the smallest unit the OS can schedule. It exists attached to a process, sharing the address space and file handles, but has its own <strong>stack, registers, and TLS</strong>.</p>
+<blockquote>
+<p><strong>Process = resource container; Thread = execution flow</strong></p>
+</blockquote>
+<h3 id="3-2-Kernel-Threads-vs-User-Threads"><a href="#3-2-Kernel-Threads-vs-User-Threads" class="headerlink" title="3.2 Kernel Threads vs. User Threads"></a>3.2 Kernel Threads vs. User Threads</h3><table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Kernel Thread (KLT)</td>
+<td>Managed by the OS kernel; scheduling, switching, and synchronization are all handled by the kernel</td>
+</tr>
+<tr>
+<td>User Thread (ULT)</td>
+<td>Implemented entirely in user space; invisible to the kernel</td>
+</tr>
+</tbody></table>
+<p>Modern mainstream languages (Java, <code>std::thread</code>, Rust) basically use the <strong>1:1 model</strong>: one user thread maps to one kernel thread.</p>
+<h3 id="3-3-Core-Characteristics-and-Problems"><a href="#3-3-Core-Characteristics-and-Problems" class="headerlink" title="3.3 Core Characteristics and Problems"></a>3.3 Core Characteristics and Problems</h3><p>✔ Preemptive scheduling (forced switching via time slices / priorities)<br>✔ Hardware context switching (privilege-level switch, TLB flush, cache invalidation)<br>✘ High cost: creation / destruction / switching overhead is at the <strong>microsecond level</strong><br>✘ Limited quantity: a single machine hits a bottleneck at a few thousand threads  </p>
+<p><strong>Too many threads, frequent context switches, and the CPU spending most of its time switching rather than computing</strong> — this is precisely the root cause driving the search for lighter-weight models in the C10K and C10M problems.</p>
+<hr>
+<h2 id="4-Fiber-A-User-Space-“Lightweight-Thread”"><a href="#4-Fiber-A-User-Space-“Lightweight-Thread”" class="headerlink" title="4. Fiber: A User-Space “Lightweight Thread”"></a>4. Fiber: A User-Space “Lightweight Thread”</h2><h3 id="4-1-Essence"><a href="#4-1-Essence" class="headerlink" title="4.1 Essence"></a>4.1 Essence</h3><p>A fiber is a <strong>cooperatively scheduled execution unit</strong> implemented entirely in user space. It is not part of the POSIX standard, and is found in the Windows Fiber API and Boost.Fiber.</p>
+<blockquote>
+<p><strong>Fiber ≈ user-space thread + cooperative scheduling</strong></p>
+</blockquote>
+<h3 id="4-2-Core-Characteristics"><a href="#4-2-Core-Characteristics" class="headerlink" title="4.2 Core Characteristics"></a>4.2 Core Characteristics</h3><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Scheduling</td>
+<td>Cooperative: yields actively, is not preempted</td>
+</tr>
+<tr>
+<td>Switching cost</td>
+<td>Extremely low: only saves/restores registers + stack pointer (nanosecond level)</td>
+</tr>
+<tr>
+<td>Quantity</td>
+<td>Can easily create hundreds of thousands or even millions</td>
+</tr>
+<tr>
+<td>Kernel awareness</td>
+<td>None — the kernel only knows the underlying thread</td>
+</tr>
+</tbody></table>
+<p><strong>Key clarification: a fiber must be parasitic on a thread.</strong></p>
+<figure class="highlight plaintext hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">OS Thread</span><br><span class="line">├── Fiber A</span><br><span class="line">├── Fiber B</span><br><span class="line">└── Fiber C</span><br></pre></td></tr></tbody></table></figure>
+
+<ul>
+<li>One thread can schedule N fibers</li>
+<li>At any given moment, a thread can run only one fiber</li>
+<li>The thread itself is still preemptively scheduled by the kernel</li>
+</ul>
+<h3 id="4-3-Typical-Implementations-and-Fatal-Flaw"><a href="#4-3-Typical-Implementations-and-Fatal-Flaw" class="headerlink" title="4.3 Typical Implementations and Fatal Flaw"></a>4.3 Typical Implementations and Fatal Flaw</h3><ul>
+<li>Windows Fiber API: <code>ConvertThreadToFiber</code>, <code>SwitchToFiber</code></li>
+<li>Boost.Fiber (based on <code>boost::context</code>)</li>
+</ul>
+<p>⚠️ <strong>An infinite loop in one fiber = the entire thread freezes.</strong> Because there is no preemption, if one fiber does not yield, the other fibers on the same thread will never get to run.</p>
+<hr>
+<h2 id="5-Coroutine-Language-Level-Cooperative-Multitasking"><a href="#5-Coroutine-Language-Level-Cooperative-Multitasking" class="headerlink" title="5. Coroutine: Language-Level Cooperative Multitasking"></a>5. Coroutine: Language-Level Cooperative Multitasking</h2><h3 id="5-1-Essence"><a href="#5-1-Essence" class="headerlink" title="5.1 Essence"></a>5.1 Essence</h3><p>A coroutine is a function that can be <strong>suspended</strong> during execution and <strong>resumed</strong> afterward. It is not an OS concept, but rather an abstraction at the <strong>language/library level</strong>.</p>
+<blockquote>
+<p><strong>Coroutine = state machine + suspend/resume semantics</strong></p>
+</blockquote>
+<p>Another point that must be clarified: <strong>a coroutine ultimately also runs on a thread</strong> — without a thread, a coroutine simply cannot run. It merely moves the “scheduling authority” from the kernel to user space / the language runtime.</p>
+<h3 id="5-2-Coroutine-Classifications"><a href="#5-2-Coroutine-Classifications" class="headerlink" title="5.2 Coroutine Classifications"></a>5.2 Coroutine Classifications</h3><p><strong>By control-transfer style:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+<th>Representative</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Symmetric coroutine</td>
+<td>Any coroutine can switch to any other</td>
+<td>Modula-2</td>
+</tr>
+<tr>
+<td>Asymmetric coroutine</td>
+<td>Can only return to its caller</td>
+<td>C++20, Python, Kotlin</td>
+</tr>
+</tbody></table>
+<p><strong>By stack form:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+<th>Representative</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stackful coroutine</td>
+<td>Each coroutine has its own stack</td>
+<td>Go goroutine, Lua</td>
+</tr>
+<tr>
+<td>Stackless coroutine</td>
+<td>State stored on the heap, reuses the call stack</td>
+<td>C++20 co_await, Rust async</td>
+</tr>
+</tbody></table>
+<h3 id="5-3-Comprehensive-Four-Way-Comparison"><a href="#5-3-Comprehensive-Four-Way-Comparison" class="headerlink" title="5.3 Comprehensive Four-Way Comparison"></a>5.3 Comprehensive Four-Way Comparison</h3><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Thread</th>
+<th>Fiber</th>
+<th>Coroutine</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Scheduler</td>
+<td>Kernel</td>
+<td>User library</td>
+<td>Language runtime</td>
+</tr>
+<tr>
+<td>Switching style</td>
+<td>Preemptive</td>
+<td>Cooperative</td>
+<td>Cooperative</td>
+</tr>
+<tr>
+<td>Stack size</td>
+<td>MB level</td>
+<td>KB~MB</td>
+<td>Stackless or small stack</td>
+</tr>
+<tr>
+<td>Scale</td>
+<td>Thousands</td>
+<td>Hundreds of thousands to millions</td>
+<td>Hundreds of thousands to millions</td>
+</tr>
+<tr>
+<td>Cost of blocking</td>
+<td>High</td>
+<td>Low</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>Execution carrier</td>
+<td>Itself</td>
+<td>Thread</td>
+<td>Thread</td>
+</tr>
+</tbody></table>
+<h3 id="5-4-Language-Implementation-Comparison"><a href="#5-4-Language-Implementation-Comparison" class="headerlink" title="5.4 Language Implementation Comparison"></a>5.4 Language Implementation Comparison</h3><p><strong>Go: goroutine + GMP scheduling</strong></p>
+<figure class="highlight go hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> { <span class="hljs-comment">/* lightweight coroutine */</span> }()</span><br></pre></td></tr></tbody></table></figure>
+<p>Stackful coroutine (initial 2KB, dynamically grows/shrinks); GMP model <code>G - M - P</code>; network poller + preemption support after 1.14.</p>
+<p><strong>Python: async/await</strong></p>
+<figure class="highlight python hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">async</span> <span class="hljs-keyword">def</span> <span class="title function_">foo</span>():</span><br><span class="line">    <span class="hljs-keyword">await</span> asyncio.sleep(<span class="hljs-number">1</span>)</span><br></pre></td></tr></tbody></table></figure>
+<p>Driven by an event loop, with cooperative switching within a single thread.</p>
+<p><strong>C++20: stackless coroutine</strong></p>
+<figure class="highlight cpp hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">task&lt;&gt; <span class="hljs-built_in">foo</span>() { <span class="hljs-function"><span class="hljs-keyword">co_await</span> <span class="hljs-title">async_op</span><span class="hljs-params">()</span></span>; }</span><br></pre></td></tr></tbody></table></figure>
+<p>A state machine generated at compile time, with zero extra stack overhead; the <strong>standard provides no scheduler, thread pool, or event loop</strong>.</p>
+<hr>
+<h2 id="6-An-In-Depth-Look-at-C-20-Coroutines-Features-but-No-Runtime"><a href="#6-An-In-Depth-Look-at-C-20-Coroutines-Features-but-No-Runtime" class="headerlink" title="6. An In-Depth Look at C++20 Coroutines: Features, but No Runtime"></a>6. An In-Depth Look at C++20 Coroutines: Features, but No Runtime</h2><h3 id="6-1-What-the-Standard-Provides"><a href="#6-1-What-the-Standard-Provides" class="headerlink" title="6.1 What the Standard Provides"></a>6.1 What the Standard Provides</h3><p>C++20 wrote coroutines into the standard: <code>co_await</code> / <code>co_yield</code> / <code>co_return</code> + <code>coroutine_handle</code> + the promise mechanism.</p>
+<p>But the standard does <strong>not</strong> provide: a thread pool, an event loop, a default scheduler, asynchronous sockets, or automatic M:N scheduling.</p>
+<blockquote>
+<p>The C++ philosophy: <strong>“I give you coroutine primitives; I don’t decide how you do concurrency.”</strong></p>
+</blockquote>
+<h3 id="6-2-Status-by-Version"><a href="#6-2-Status-by-Version" class="headerlink" title="6.2 Status by Version"></a>6.2 Status by Version</h3><table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Coroutine Syntax</th>
+<th>Coroutine Runtime</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>C++17 and earlier</td>
+<td>✘</td>
+<td>✘ (rely on third-party libraries)</td>
+</tr>
+<tr>
+<td>C++20</td>
+<td>✔</td>
+<td>✘</td>
+</tr>
+<tr>
+<td>C++23</td>
+<td>✔ + std::generator</td>
+<td>✘</td>
+</tr>
+<tr>
+<td>C++26 (in progress)</td>
+<td>✔ + parts of std::execution</td>
+<td>Executor abstraction, not a complete runtime</td>
+</tr>
+</tbody></table>
+<p><strong>Comparison with other languages:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Language</th>
+<th>Lightweight concurrency unit</th>
+<th>Built-in runtime</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Go</td>
+<td>goroutine</td>
+<td>✔ GMP + netpoller</td>
+</tr>
+<tr>
+<td>Java 21+</td>
+<td>Virtual Thread</td>
+<td>✔ JVM + ForkJoinPool</td>
+</tr>
+<tr>
+<td>Kotlin</td>
+<td>coroutine</td>
+<td>✔ runtime + Dispatcher</td>
+</tr>
+<tr>
+<td>C# / .NET</td>
+<td>async Task</td>
+<td>✔ CLR + Task Scheduler</td>
+</tr>
+<tr>
+<td>C++20/23</td>
+<td>coroutine</td>
+<td>✘ at the standard level</td>
+</tr>
+</tbody></table>
+<h3 id="6-3-Why-Coroutines-Must-Run-on-a-Thread"><a href="#6-3-Why-Coroutines-Must-Run-on-a-Thread" class="headerlink" title="6.3 Why Coroutines Must Run on a Thread"></a>6.3 Why Coroutines Must Run on a Thread</h3><p>C++20 uses stackless coroutines: the coroutine frame lives on the heap, and when resumed it <strong>borrows the caller thread’s stack</strong> to execute.</p>
+<figure class="highlight cpp hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">auto</span> t = <span class="hljs-built_in">foo</span>(); <span class="hljs-comment">// foo is a coroutine</span></span><br></pre></td></tr></tbody></table></figure>
+
+<p><code>foo()</code> only creates the coroutine frame; when it runs and on which thread is entirely up to you (or your library) and how you call <code>resume()</code>.</p>
+<blockquote>
+<p><strong><code>coroutine_handle::resume()</code> necessarily happens inside some thread.</strong></p>
+</blockquote>
+<h3 id="6-4-The-Timing-of-Coroutine-Suspension-Resumption"><a href="#6-4-The-Timing-of-Coroutine-Suspension-Resumption" class="headerlink" title="6.4 The Timing of Coroutine Suspension / Resumption"></a>6.4 The Timing of Coroutine Suspension / Resumption</h3><pre><code class="highlight mermaid">sequenceDiagram
+    participant Caller as Caller Thread
+    participant Coro as Coroutine Frame (heap)
+    participant Awaiter as Awaiter
+    participant Pool as Thread Pool (worker)
+
+    Caller-&gt;&gt;Coro: call foo(), create coroutine frame
+    Caller-&gt;&gt;Coro: co_await x, suspend
+    Coro-&gt;&gt;Awaiter: call await_suspend(h)
+    Awaiter-&gt;&gt;Pool: post handle to task queue
+    Caller--&gt;&gt;Caller: caller thread returns immediately (non-blocking)
+    Pool-&gt;&gt;Pool: worker takes task
+    Pool-&gt;&gt;Coro: h.resume() on some worker thread
+    Coro-&gt;&gt;Caller: coroutine continues until next suspension point</code></pre>
+
+<p><strong>Core conclusion:</strong> The real meaning of <code>co_await x</code> is — “I am suspending now; which thread wakes me up later is decided by <code>x.await_suspend()</code>.” A coroutine does not run “somewhere else”; it runs on the thread that calls <code>resume()</code>. The thread pool is not part of the coroutine — it is the scheduling backend of the awaiter.</p>
+<hr>
+<h2 id="7-Engineering-Practice-C-20-Coroutines-Thread-Pool"><a href="#7-Engineering-Practice-C-20-Coroutines-Thread-Pool" class="headerlink" title="7. Engineering Practice: C++20 Coroutines + Thread Pool"></a>7. Engineering Practice: C++20 Coroutines + Thread Pool</h2><h3 id="7-1-When-Do-You-Need-a-Thread-Pool"><a href="#7-1-When-Do-You-Need-a-Thread-Pool" class="headerlink" title="7.1 When Do You Need a Thread Pool?"></a>7.1 When Do You Need a Thread Pool?</h3><table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Needed?</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Single-threaded generator / lazy computation</td>
+<td>✘</td>
+<td>No concurrency needed</td>
+</tr>
+<tr>
+<td>Asynchronous IO</td>
+<td>✔</td>
+<td>Requires an executor / io context</td>
+</tr>
+<tr>
+<td>CPU-bound / multi-core parallelism</td>
+<td>✔</td>
+<td>Coroutines do not parallelize automatically</td>
+</tr>
+<tr>
+<td>Blocking system call</td>
+<td>✔</td>
+<td>Avoid blocking all coroutines on the same thread</td>
+</tr>
+</tbody></table>
+<h3 id="7-2-Minimal-Implementation"><a href="#7-2-Minimal-Implementation" class="headerlink" title="7.2 Minimal Implementation"></a>7.2 Minimal Implementation</h3><p><strong>Thread pool:</strong></p>
+<figure class="highlight cpp hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">class</span> <span class="title class_">ThreadPool</span> {</span><br><span class="line"><span class="hljs-keyword">public</span>:</span><br><span class="line">    <span class="hljs-function"><span class="hljs-keyword">explicit</span> <span class="hljs-title">ThreadPool</span><span class="hljs-params">(<span class="hljs-type">size_t</span> n = std::thread::hardware_concurrency())</span> </span>{</span><br><span class="line">        <span class="hljs-keyword">for</span> (<span class="hljs-type">size_t</span> i = <span class="hljs-number">0</span>; i &lt; n; ++i)</span><br><span class="line">            workers_.<span class="hljs-built_in">emplace_back</span>([<span class="hljs-keyword">this</span>] { <span class="hljs-built_in">run</span>(); });</span><br><span class="line">    }</span><br><span class="line">    ~<span class="hljs-built_in">ThreadPool</span>() {</span><br><span class="line">        { <span class="hljs-function">std::unique_lock&lt;std::mutex&gt; <span class="hljs-title">lk</span><span class="hljs-params">(mtx_)</span></span>; stop_ = <span class="hljs-literal">true</span>; }</span><br><span class="line">        cv_.notify_all();</span><br><span class="line">        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span>&amp; t : workers_) t.<span class="hljs-built_in">join</span>();</span><br><span class="line">    }</span><br><span class="line">    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">enqueue</span><span class="hljs-params">(std::function&lt;<span class="hljs-type">void</span>()&gt; f)</span> </span>{</span><br><span class="line">        { <span class="hljs-function">std::unique_lock&lt;std::mutex&gt; <span class="hljs-title">lk</span><span class="hljs-params">(mtx_)</span></span>; tasks_.<span class="hljs-built_in">push</span>(std::<span class="hljs-built_in">move</span>(f)); }</span><br><span class="line">        cv_.notify_one();</span><br><span class="line">    }</span><br><span class="line"><span class="hljs-keyword">private</span>:</span><br><span class="line">    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">run</span><span class="hljs-params">()</span> </span>{</span><br><span class="line">        <span class="hljs-keyword">while</span> (<span class="hljs-literal">true</span>) {</span><br><span class="line">            std::function&lt;<span class="hljs-type">void</span>()&gt; task;</span><br><span class="line">            {   <span class="hljs-function">std::unique_lock&lt;std::mutex&gt; <span class="hljs-title">lk</span><span class="hljs-params">(mtx_)</span></span>;</span><br><span class="line">                cv_.<span class="hljs-built_in">wait</span>(lk, [<span class="hljs-keyword">this</span>] { <span class="hljs-keyword">return</span> stop_ || !tasks_.<span class="hljs-built_in">empty</span>(); });</span><br><span class="line">                <span class="hljs-keyword">if</span> (stop_ &amp;&amp; tasks_.<span class="hljs-built_in">empty</span>()) <span class="hljs-keyword">return</span>;</span><br><span class="line">                task = std::<span class="hljs-built_in">move</span>(tasks_.<span class="hljs-built_in">front</span>()); tasks_.<span class="hljs-built_in">pop</span>();</span><br><span class="line">            }</span><br><span class="line">            <span class="hljs-built_in">task</span>();</span><br><span class="line">        }</span><br><span class="line">    }</span><br><span class="line">    std::vector&lt;std::thread&gt; workers_;</span><br><span class="line">    std::queue&lt;std::function&lt;<span class="hljs-type">void</span>()&gt;&gt; tasks_;</span><br><span class="line">    std::mutex mtx_; std::condition_variable cv_; <span class="hljs-type">bool</span> stop_ = <span class="hljs-literal">false</span>;</span><br><span class="line">};</span><br></pre></td></tr></tbody></table></figure>
+
+<p><strong>Custom awaiter:</strong></p>
+<figure class="highlight cpp hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">struct</span> <span class="title class_">ScheduleOnPool</span> {</span><br><span class="line">    ThreadPool&amp; pool;</span><br><span class="line">    <span class="hljs-function"><span class="hljs-type">bool</span> <span class="hljs-title">await_ready</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> <span class="hljs-keyword">noexcept</span> </span>{ <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>; }</span><br><span class="line">    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">await_suspend</span><span class="hljs-params">(std::coroutine_handle&lt;&gt; h)</span> <span class="hljs-type">const</span> </span>{</span><br><span class="line">        pool.<span class="hljs-built_in">enqueue</span>([h]() <span class="hljs-keyword">mutable</span> { h.<span class="hljs-built_in">resume</span>(); });</span><br><span class="line">    }</span><br><span class="line">    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">await_resume</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> <span class="hljs-keyword">noexcept</span> </span>{}</span><br><span class="line">};</span><br></pre></td></tr></tbody></table></figure>
+
+<p><strong>Task return type and usage:</strong></p>
+<figure class="highlight cpp hljs"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-keyword">struct</span> <span class="title class_">Task</span> {</span><br><span class="line">    <span class="hljs-keyword">struct</span> <span class="title class_">promise_type</span> {</span><br><span class="line">        <span class="hljs-function">Task <span class="hljs-title">get_return_object</span><span class="hljs-params">()</span> </span>{ <span class="hljs-keyword">return</span> {}; }</span><br><span class="line">        <span class="hljs-function">std::suspend_never <span class="hljs-title">initial_suspend</span><span class="hljs-params">()</span> </span>{ <span class="hljs-keyword">return</span> {}; }</span><br><span class="line">        <span class="hljs-function">std::suspend_never <span class="hljs-title">final_suspend</span><span class="hljs-params">()</span> <span class="hljs-keyword">noexcept</span> </span>{ <span class="hljs-keyword">return</span> {}; }</span><br><span class="line">        <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">return_void</span><span class="hljs-params">()</span> </span>{}</span><br><span class="line">        <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">unhandled_exception</span><span class="hljs-params">()</span> </span>{ std::<span class="hljs-built_in">terminate</span>(); }</span><br><span class="line">    };</span><br><span class="line">};</span><br><span class="line"></span><br><span class="line"><span class="hljs-function">Task <span class="hljs-title">compute</span><span class="hljs-params">(ThreadPool&amp; pool, <span class="hljs-type">int</span> x)</span> </span>{</span><br><span class="line">    <span class="hljs-keyword">co_await</span> ScheduleOnPool{pool};</span><br><span class="line">    std::cout &lt;&lt; <span class="hljs-string">"thread: "</span> &lt;&lt; std::this_thread::<span class="hljs-built_in">get_id</span>() &lt;&lt; <span class="hljs-string">" x="</span> &lt;&lt; x &lt;&lt; <span class="hljs-string">'\n'</span>;</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>{</span><br><span class="line">    <span class="hljs-function">ThreadPool <span class="hljs-title">pool</span><span class="hljs-params">(<span class="hljs-number">4</span>)</span></span>;</span><br><span class="line">    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; ++i) <span class="hljs-built_in">compute</span>(pool, i);</span><br><span class="line">    std::this_thread::<span class="hljs-built_in">sleep_for</span>(std::chrono::<span class="hljs-built_in">seconds</span>(<span class="hljs-number">1</span>));</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure>
+
+<p>Core idea: inside <code>await_suspend</code>, post the <code>coroutine_handle</code> to the thread pool, and let a worker thread call <code>resume()</code>.</p>
+<h3 id="7-3-Production-Grade-Solutions"><a href="#7-3-Production-Grade-Solutions" class="headerlink" title="7.3 Production-Grade Solutions"></a>7.3 Production-Grade Solutions</h3><table>
+<thead>
+<tr>
+<th>Solution</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Boost.Asio</td>
+<td><code>asio::thread_pool</code> + <code>co_spawn</code> + <code>use_awaitable</code></td>
+</tr>
+<tr>
+<td>cppcoro</td>
+<td><code>static_thread_pool::schedule()</code></td>
+</tr>
+<tr>
+<td>libunifex</td>
+<td>Sender/Receiver model</td>
+</tr>
+<tr>
+<td>Custom-built</td>
+<td>Custom awaiter + thread pool / IO loop</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="8-Differences-in-Design-Philosophy"><a href="#8-Differences-in-Design-Philosophy" class="headerlink" title="8. Differences in Design Philosophy"></a>8. Differences in Design Philosophy</h2><h3 id="8-1-Scheduling-Philosophy"><a href="#8-1-Scheduling-Philosophy" class="headerlink" title="8.1 Scheduling Philosophy"></a>8.1 Scheduling Philosophy</h3><ul>
+<li><strong>Thread</strong>: You never know when you’ll be switched out — you must lock everywhere</li>
+<li><strong>Fiber / coroutine</strong>: Switching happens only at yield/await points — no locks needed for critical sections within a single thread</li>
+</ul>
+<h3 id="8-2-Concurrency-vs-Parallelism"><a href="#8-2-Concurrency-vs-Parallelism" class="headerlink" title="8.2 Concurrency vs. Parallelism"></a>8.2 Concurrency vs. Parallelism</h3><ul>
+<li><strong>Thread</strong>: Naturally supports parallelism (multi-core)</li>
+<li><strong>Fiber / coroutine</strong>: Essentially concurrent; parallelism depends on being bound to multiple threads</li>
+</ul>
+<blockquote>
+<p><strong>A coroutine not blocking a thread ≠ a coroutine not needing a thread</strong></p>
+</blockquote>
+<h3 id="8-3-One-Liner-to-Distinguish-the-Three"><a href="#8-3-One-Liner-to-Distinguish-the-Three" class="headerlink" title="8.3 One-Liner to Distinguish the Three"></a>8.3 One-Liner to Distinguish the Three</h3><blockquote>
+<p><strong>A thread is the OS’s abstraction, a fiber is the user’s attempt, and a coroutine is the language’s answer.</strong></p>
+</blockquote>
+<p><strong>A Go programmer writing coroutines is using a runtime; a C++ programmer writing coroutines is building a runtime.</strong></p>
+<hr>
+<h2 id="9-Selection-Guide"><a href="#9-Selection-Guide" class="headerlink" title="9. Selection Guide"></a>9. Selection Guide</h2><table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Recommended Approach</th>
+<th>Representative Technology</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CPU-bound</td>
+<td>Thread pool</td>
+<td>Fully utilize multi-core</td>
+</tr>
+<tr>
+<td>IO-bound</td>
+<td>Coroutine</td>
+<td>Go / Java Virtual Thread / Kotlin Coroutine</td>
+</tr>
+<tr>
+<td>Extreme-performance middleware</td>
+<td>Fiber / stackful coroutine</td>
+<td>libco, Boost.Fiber</td>
+</tr>
+<tr>
+<td>C++ project</td>
+<td>Coroutine + thread pool / executor</td>
+<td>Boost.Asio, cppcoro</td>
+</tr>
+<tr>
+<td>Systems programming</td>
+<td>Thread + event-loop hybrid</td>
+<td>—</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="10-Summary"><a href="#10-Summary" class="headerlink" title="10. Summary"></a>10. Summary</h2><ul>
+<li><strong>Threads</strong> solved the problem of parallelism, but at a high cost</li>
+<li><strong>Fibers</strong> proved the feasibility of user-space scheduling, but cooperative scheduling has its limits</li>
+<li><strong>Coroutines</strong>, through language-level support, turn asynchronous code into something that looks synchronous, greatly reducing mental burden</li>
+<li><strong>C++20</strong> provides coroutine primitives but no runtime, leaving scheduling freedom to the developer</li>
+</ul>
+<p><strong>A thread is the OS’s unit of execution; fibers and coroutines are user-space execution flows. They do not replace threads — they are built on top of threads, organizing concurrency in a lighter-weight way.</strong></p>
+<!-- hexo injector body_end start -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    mermaid.initialize({"startOnLoad":true});
+  });
+</script>
+<!-- hexo injector body_end end --></body></html>
+    
+    </div>
+    
+    <div class="columns is-variable is-1 is-multiline is-mobile">
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Operating-Systems/">#Operating Systems</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/C-Programming/">#C++ Programming</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Systems-Design/">#Systems Design</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Concurrency/">#Concurrency</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Process/">#Process</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Thread/">#Thread</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Fiber/">#Fiber</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Coroutine/">#Coroutine</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/C-20/">#C++20</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Goroutine/">#Goroutine</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Async-Await/">#Async/Await</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Scheduler/">#Scheduler</a></span>
+    
+        <span class="column is-narrow"><a class="tag is-light article-tag" href="/tags/Thread-Pool/">#Thread Pool</a></span>
+    
+    </div>
+    
+    
+    <div class="columns is-mobile is-multiline article-nav">
+        <span class="column is-12-mobile is-half-desktop  article-nav-prev">
+            
+            <a href="/posts/2024/09/01/How_I_Standardized_Frontend-Backend_Collaboration/">How I Standardized Frontend-Backend Collaboration as a Tech Lead</a>
+            
+        </span>
+        <span class="column is-12-mobile is-half-desktop is-hidden-mobile article-nav-next">
+            
+        </span>
+    </div>
+    
+</article>
+
+
+
+
+    </div>
+</section>
+    <footer class="footer">
+    <div class="container">
+        <div class="columns content">
+            <div class="column is-hidden-mobile"></div>
+
+            
+            
+        </div>
+    </div>
+</footer>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment-with-locales.min.js"></script>
+
+<!-- test if the browser is outdated -->
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/">Update my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/outdated-browser/1.1.5/outdatedbrowser.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // plugin function, place inside DOM ready function
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        })
+    });
+</script>
+
+<script>
+    window.FontAwesomeConfig = {
+        searchPseudoElements: true
+    }
+    moment.locale("en-AU");
+</script>
+
+
+    
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        "HTML-CSS": {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+</script>
+
+    
+    
+    
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/lightgallery/1.6.8/js/lightgallery-all.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.6.5/js/jquery.justifiedGallery.min.js"></script>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            if (typeof($.fn.lightGallery) === 'function') {
+                $('.article.gallery').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof($.fn.justifiedGallery) === 'function') {
+                $('.justified-gallery > p > .gallery-item').unwrap();
+                $('.justified-gallery').justifiedGallery();
+            }
+        });
+    })(jQuery);
+</script>
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
+    <style>
+        .hljs {
+            position: relative;
+        }
+
+        .hljs .clipboard-btn {
+            float: right;
+            color: #9a9a9a;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .hljs .clipboard-btn:hover {
+          color: #8a8a8a;
+        }
+
+        .hljs > .clipboard-btn {
+            display: none;
+            position: absolute;
+            right: 4px;
+            top: 4px;
+        }
+
+        .hljs:hover > .clipboard-btn {
+            display: inline;
+        }
+
+        .hljs > figcaption > .clipboard-btn {
+            margin-right: 4px;
+        }
+    </style>
+    <script>
+      $(document).ready(function () {
+        $('figure.hljs').each(function(i, figure) {
+          var codeId = 'code-' + i;
+          var code = figure.querySelector('.code');
+          var copyButton = $('<button>Copy <i class="far fa-clipboard"></i></button>');
+          code.id = codeId;
+          copyButton.addClass('clipboard-btn');
+          copyButton.attr('data-clipboard-target-id', codeId);
+
+          var figcaption = figure.querySelector('figcaption');
+
+          if (figcaption) {
+            figcaption.append(copyButton[0]);
+          } else {
+            figure.prepend(copyButton[0]);
+          }
+        })
+
+        var clipboard = new ClipboardJS('.clipboard-btn', {
+          target: function(trigger) {
+            return document.getElementById(trigger.getAttribute('data-clipboard-target-id'));
+          }
+        });
+        clipboard.on('success', function(e) {
+          e.clearSelection();
+        })
+      })
+    </script>
+
+    
+    
+
+    
+
+
+
+<script src="/js/script.js"></script>
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-mask"></div>
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="Type something..." />
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: 'Posts',
+                PAGES: 'Pages',
+                CATEGORIES: 'Categories',
+                TAGS: 'Tags',
+                UNTITLED: '(Untitled)',
+            },
+            CONTENT_URL: '/content.json',
+            BASE_URL: '/',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+    
+</body>
+</html>
